@@ -1,10 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'MVN'        // Name of Maven installation in Jenkins
-        jdk 'JDK17'          // Name of JDK installation in Jenkins
-    }
+    // No tools block needed: Jenkins image has Java 17 built-in
+    // We use Maven wrapper (mvnw) from the project repository
 
     stages {
 
@@ -16,19 +14,19 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh './mvnw clean package -DskipTests'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh './mvnw test'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn package'
+                sh './mvnw package'
             }
             post {
                 success {
@@ -38,9 +36,11 @@ pipeline {
         }
     }
 
+    //il faut ajouter 2 analyse jacococ et sonarqube
+
     post {
         always {
-            junit 'target/surefire-reports/*.xml'
+            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
         }
     }
 }
