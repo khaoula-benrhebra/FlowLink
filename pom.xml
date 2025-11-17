@@ -192,9 +192,10 @@
                         </configuration>
                     </execution>
 
-                    <!-- 4. Vérifie la couverture minimale (optionnel) -->
+                    <!-- 4. Vérifie la couverture minimale (bloque le build si insuffisant) -->
                     <execution>
                         <id>check</id>
+                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
@@ -202,15 +203,19 @@
                             <rules>
                                 <rule>
                                     <element>PACKAGE</element>
+                                    <excludes>
+                                        <exclude>*Test</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum> <!-- 50% minimum -->
+                                            <minimum>0.50</minimum> <!-- 50% minimum coverage -->
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
+                            <haltOnFailure>true</haltOnFailure>
                         </configuration>
                     </execution>
                 </executions>

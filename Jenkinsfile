@@ -12,25 +12,38 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                sh 'chmod +x ./mvnw && ./mvnw clean package'
+                sh 'chmod +x ./mvnw && ./mvnw clean test'
             }
         }
 
-        stage('Test') {
+        stage('Code Coverage Check (JaCoCo)') {
             steps {
-                sh 'chmod +x ./mvnw && ./mvnw test'
+                script {
+                    try {
+                        sh 'chmod +x ./mvnw && ./mvnw verify'
+                    } catch (Exception e) {
+                        echo "⚠️ Code coverage is below 50% threshold!"
+                        currentBuild.result = 'FAILURE'
+                        error("Build failed: Code coverage < 50%")
+                    }
+                }
             }
         }
 
         stage('Package') {
             steps {
-                sh 'chmod +x ./mvnw && ./mvnw package'
+                sh 'chmod +x ./mvnw && ./mvnw package -DskipTests'
             }
             post {
                 success {
                     archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                    publishHTML([
+                        reportDir: 'target/site/jacoco',
+                        reportFiles: 'index.html',
+                        reportName: 'JaCoCo Coverage Report'
+                    ])
                 }
             }
         }
@@ -41,6 +54,12 @@ pipeline {
     post {
         always {
             junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
+        }
+        failure {
+            echo "❌ Pipeline FAILED - Check coverage or build errors above"
+        }
+        success {
+            echo "✅ Pipeline SUCCESS - All checks passed!"
         }
     }
 }
