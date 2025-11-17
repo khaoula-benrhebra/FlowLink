@@ -19,8 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 public class SupplyOrderDTO {
 
-    @NotBlank(message = "Le numéro de commande est obligatoire")
-    private String orderNumber;
 
     @NotNull(message = "L'ID du fournisseur est obligatoire")
     private Long supplierId;

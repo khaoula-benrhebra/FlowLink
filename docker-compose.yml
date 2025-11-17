@@ -23,6 +23,40 @@ services:
       retries: 5
       start_period: 10s
 
+  # Base de données pour SonarQube
+  sonarqube-db:
+    image: postgres:16-alpine
+    container_name: sonarqube-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sonarqube
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - sonarqube_db:/var/lib/postgresql/data
+    networks:
+      - FlowLink-network
+
+  # SonarQube
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    restart: unless-stopped
+    depends_on:
+      - sonarqube-db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - FlowLink-network
+
   app:
     build:
       context: .
@@ -72,85 +106,15 @@ volumes:
     driver: local
   pgadmin_data:
     driver: local
+  sonarqube_db:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
 
 networks:
   FlowLink-network:
     driver: bridge
-
-#
-#version: '3.8'
-#
-#services:
-#  mysql:
-#    image: mysql:8.1
-#    container_name: supplychainx-mysql
-#    restart: unless-stopped
-#    environment:
-#      MYSQL_DATABASE: supplychainx_db
-#      MYSQL_USER: supplychainx_user
-#      MYSQL_PASSWORD: supplychainx_pass
-#      MYSQL_ROOT_PASSWORD: root_pass
-#      MYSQL_ROOT_HOST: '%'
-#    ports:
-#      - "3307:3306"
-#    volumes:
-#      - mysql_data:/var/lib/mysql
-#    networks:
-#      - supplychainx-network
-#    healthcheck:
-#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "supplychainx_user", "-psupplychainx_pass"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 30s
-#
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: supplychainx-app
-#    restart: unless-stopped
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_PROFILES_ACTIVE: docker
-#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/supplychainx_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-#      SPRING_DATASOURCE_USERNAME: supplychainx_user
-#      SPRING_DATASOURCE_PASSWORD: supplychainx_pass
-#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-#      SPRING_LIQUIBASE_ENABLED: true
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#    networks:
-#      - supplychainx-network
-#    healthcheck:
-#      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
-#      interval: 30s
-#      timeout: 5s
-#      retries: 3
-#      start_period: 150s
-#
-#  phpmyadmin:
-#    image: phpmyadmin/phpmyadmin:latest
-#    container_name: supplychainx-phpmyadmin
-#    restart: unless-stopped
-#    environment:
-#      PMA_HOST: mysql
-#      PMA_PORT: 3306
-#      PMA_USER: supplychainx_user
-#      PMA_PASSWORD: supplychainx_pass
-#    ports:
-#      - "8081:80"#http://localhost:8081/
-#    depends_on:
-#      - mysql
-#    networks:
-#      - supplychainx-network
-#
-#volumes:
-#  mysql_data:
-#    driver: local
-#
-#networks:
-#  supplychainx-network:
-#    driver: bridge

@@ -79,7 +79,7 @@ public class DeliveryController {
     public ResponseEntity<SuccessResponse<Page<DeliveryDTO>>> getAllDeliveries(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "deliveryDate") String sortBy,
+            @RequestParam(defaultValue = "idDelivery") String sortBy,
             @RequestParam(defaultValue = "desc") String direction,
             HttpServletRequest request) {
 

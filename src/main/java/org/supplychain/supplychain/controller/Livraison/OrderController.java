@@ -81,7 +81,7 @@ public class OrderController {
     public ResponseEntity<SuccessResponse<Page<OrderDTO>>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "orderDate") String sortBy,
+            @RequestParam(defaultValue = "idOrder") String sortBy,
             @RequestParam(defaultValue = "desc") String direction,
             HttpServletRequest request) {
 
@@ -105,7 +105,7 @@ public class OrderController {
             @PathVariable OrderStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "orderDate") String sortBy,
+            @RequestParam(defaultValue = "idOrder") String sortBy,
             @RequestParam(defaultValue = "desc") String direction,
             HttpServletRequest request) {
 

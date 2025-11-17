@@ -25,9 +25,6 @@ public class SupplyOrder extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idOrder;
 
-    @Column(nullable = false, unique = true)
-    private String orderNumber;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;

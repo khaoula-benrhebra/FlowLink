@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
-    Optional<Delivery> findByDeliveryNumber(String deliveryNumber);
+
 
     Page<Delivery> findAll(Pageable pageable);
 

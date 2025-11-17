@@ -14,8 +14,6 @@ import java.util.Optional;
 @Repository
 public interface SupplyOrderRepository extends JpaRepository<SupplyOrder, Long> {
 
-    //  Vérifier l'unicité du numéro de commande
-    Optional<SupplyOrder> findByOrderNumber(String orderNumber);
 
     //Consulter la liste complète des commandes avec pagination
     Page<SupplyOrder> findAll(Pageable pageable);

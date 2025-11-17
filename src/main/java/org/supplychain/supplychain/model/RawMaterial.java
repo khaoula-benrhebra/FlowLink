@@ -26,8 +26,6 @@ public class RawMaterial extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    private String description;
-
     @Column(nullable = false)
     private Integer stock = 0;
 

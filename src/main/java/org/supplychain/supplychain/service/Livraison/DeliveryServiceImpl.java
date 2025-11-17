@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.supplychain.supplychain.dto.Livraison.DeliveryDTO;
 import org.supplychain.supplychain.exception.DuplicateResourceException;
 import org.supplychain.supplychain.exception.ResourceNotFoundException;
-import org.supplychain.supplychain.mapper.modelDelivery.DeliveryMapper;
+import org.supplychain.supplychain.mapper.Livraison.DeliveryMapper;
 import org.supplychain.supplychain.model.Delivery;
 import org.supplychain.supplychain.model.Order;
 import org.supplychain.supplychain.repository.Livraison.DeliveryRepository;

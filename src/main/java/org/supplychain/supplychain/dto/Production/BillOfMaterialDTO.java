@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 
 public class BillOfMaterialDTO {
 
-    @NotNull(message = "L'ID du produit est obligatoire")
-    private Long productId;
+    //@NotNull(message = "L'ID du produit est obligatoire")
+    //private Long productId;
 
     private String productName;
 

@@ -46,17 +46,19 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Le Bill of Materials (BOM) est obligatoire lors de la création d'un produit");
         }
 
-        // Créer le produit
+        // Créer le produit (sans toucher au stock)
         Product product = productMapper.toEntity(productDTO);
         Product savedProduct = productRepository.save(product);
 
         // Créer les entrées BOM
         List<BillOfMaterial> bomList = new ArrayList<>();
         for (BillOfMaterialDTO bomDTO : productDTO.getBillOfMaterials()) {
+            // Vérifier que la matière première existe
             RawMaterial rawMaterial = rawMaterialRepository.findById(bomDTO.getMaterialId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Matière première non trouvée avec l'ID : " + bomDTO.getMaterialId()));
 
+            // Créer l'entrée BOM
             BillOfMaterial bom = new BillOfMaterial();
             bom.setProduct(savedProduct);
             bom.setMaterial(rawMaterial);
@@ -65,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
             bomList.add(bom);
         }
 
+        // Sauvegarder le BOM
         bomRepository.saveAll(bomList);
         savedProduct.setBillOfMaterials(bomList);
 
@@ -82,20 +85,24 @@ public class ProductServiceImpl implements ProductService {
             throw new DuplicateResourceException("Un autre produit avec le nom '" + productDTO.getName() + "' existe déjà");
         }
 
-        // Mettre à jour les informations du produit
+        // Mettre à jour les informations du produit (sans le BOM)
         productMapper.updateEntityFromDTO(productDTO, existingProduct);
 
         // Mettre à jour le BOM si fourni
         if (productDTO.getBillOfMaterials() != null && !productDTO.getBillOfMaterials().isEmpty()) {
+            // Supprimer l'ancien BOM
             bomRepository.deleteByProduct_IdProduct(id);
             bomRepository.flush();
 
+            // Créer le nouveau BOM
             List<BillOfMaterial> bomList = new ArrayList<>();
             for (BillOfMaterialDTO bomDTO : productDTO.getBillOfMaterials()) {
+                // Vérifier que la matière première existe
                 RawMaterial rawMaterial = rawMaterialRepository.findById(bomDTO.getMaterialId())
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 "Matière première non trouvée avec l'ID : " + bomDTO.getMaterialId()));
 
+                // Créer l'entrée BOM
                 BillOfMaterial bom = new BillOfMaterial();
                 bom.setProduct(existingProduct);
                 bom.setMaterial(rawMaterial);
@@ -104,6 +111,7 @@ public class ProductServiceImpl implements ProductService {
                 bomList.add(bom);
             }
 
+            // Sauvegarder le nouveau BOM
             bomRepository.saveAll(bomList);
             existingProduct.setBillOfMaterials(bomList);
         }
@@ -126,6 +134,7 @@ public class ProductServiceImpl implements ProductService {
             );
         }
 
+        // Supprimer le produit (le BOM sera supprimé automatiquement en cascade)
         productRepository.delete(product);
     }
 

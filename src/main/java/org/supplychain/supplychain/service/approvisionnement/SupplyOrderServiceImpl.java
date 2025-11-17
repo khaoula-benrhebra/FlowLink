@@ -41,9 +41,6 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
 
     @Override
     public SupplyOrderDTO createSupplyOrder(SupplyOrderDTO supplyOrderDTO) {
-        if (supplyOrderRepository.findByOrderNumber(supplyOrderDTO.getOrderNumber()).isPresent()) {
-            throw new DuplicateResourceException("SupplyOrder", "orderNumber", supplyOrderDTO.getOrderNumber());
-        }
 
         Supplier supplier = supplierRepository.findById(supplyOrderDTO.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplyOrderDTO.getSupplierId()));
@@ -85,17 +82,10 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         SupplyOrder existingOrder = supplyOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
 
-        supplyOrderRepository.findByOrderNumber(supplyOrderDTO.getOrderNumber())
-                .ifPresent(order -> {
-                    if (!order.getIdOrder().equals(id)) {
-                        throw new DuplicateResourceException("SupplyOrder", "orderNumber", supplyOrderDTO.getOrderNumber());
-                    }
-                });
 
         Supplier supplier = supplierRepository.findById(supplyOrderDTO.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplyOrderDTO.getSupplierId()));
 
-        existingOrder.setOrderNumber(supplyOrderDTO.getOrderNumber());
         existingOrder.setSupplier(supplier);
         existingOrder.setOrderDate(supplyOrderDTO.getOrderDate());
         existingOrder.setStatus(supplyOrderDTO.getStatus());

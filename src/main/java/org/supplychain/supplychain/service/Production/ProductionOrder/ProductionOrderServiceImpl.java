@@ -8,15 +8,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.supplychain.supplychain.dto.Production.ProductionOrderDTO;
 import org.supplychain.supplychain.enums.Priority;
 import org.supplychain.supplychain.enums.ProductionOrderStatus;
+import org.supplychain.supplychain.exception.InsufficientStockException;
 import org.supplychain.supplychain.exception.ResourceInUseException;
 import org.supplychain.supplychain.exception.ResourceNotFoundException;
 import org.supplychain.supplychain.mapper.Production.ProductionOrderMapper;
+import org.supplychain.supplychain.model.BillOfMaterial;
 import org.supplychain.supplychain.model.Product;
 import org.supplychain.supplychain.model.ProductionOrder;
+import org.supplychain.supplychain.model.RawMaterial;
 import org.supplychain.supplychain.repository.Production.ProductRepository;
 import org.supplychain.supplychain.repository.Production.ProductionOrderRepository;
+import org.supplychain.supplychain.repository.approvisionnement.RawMaterialRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,38 +30,109 @@ public class ProductionOrderServiceImpl implements ProductionOrderService {
     private final ProductionOrderRepository productionOrderRepository;
     private final ProductRepository productRepository;
     private final ProductionOrderMapper productionOrderMapper;
+    private final RawMaterialRepository rawMaterialRepository;
 
     @Override
     @Transactional
     public ProductionOrderDTO createProductionOrder(ProductionOrderDTO dto) {
-        // Vérifier que le produit existe
+        // 1. Vérifier que le produit existe
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Produit non trouvé avec l'ID : " + dto.getProductId()));
 
-        // Créer l'ordre de production
+        // 2. Vérifier si le stock du produit fini est suffisant
+        Integer stockProduit = product.getStock() != null ? product.getStock() : 0;
+        Integer quantiteDemandee = dto.getQuantity();
+
         ProductionOrder productionOrder = productionOrderMapper.toEntity(dto);
         productionOrder.setProduct(product);
-
-        // Définir le statut
-        if (productionOrder.getStatus() == null) {
-            productionOrder.setStatus(ProductionOrderStatus.EN_ATTENTE);
-        }
 
         // Définir la priorité par défaut
         if (productionOrder.getPriority() == null) {
             productionOrder.setPriority(Priority.STANDARD);
         }
 
-        // Calculer le temps estimé de production
-        // endDate = quantity * productionTime (en jours)
-        if (productionOrder.getStartDate() != null) {
-            int estimatedDays = dto.getQuantity() * product.getProductionTime();
-            productionOrder.setEndDate(productionOrder.getStartDate().plusDays(estimatedDays));
+        // CAS 1 : Le stock du produit fini est suffisant
+        if (stockProduit >= quantiteDemandee) {
+            // Pas besoin de produire, on déduit directement du stock
+            product.setStock(stockProduit - quantiteDemandee);
+            productRepository.save(product);
+
+            // Statut = TERMINE
+            productionOrder.setStatus(ProductionOrderStatus.TERMINE);
+
+            // Dates automatiques (commande déjà terminée)
+            productionOrder.setStartDate(LocalDate.now());
+            productionOrder.setEndDate(LocalDate.now());
+
+            ProductionOrder savedOrder = productionOrderRepository.save(productionOrder);
+            return productionOrderMapper.toDTO(savedOrder);
         }
 
-        ProductionOrder savedOrder = productionOrderRepository.save(productionOrder);
+        // CAS 2 : Le stock du produit fini est insuffisant
+        // Calculer combien il faut vraiment produire
+        Integer quantiteAProduire = quantiteDemandee - stockProduit;
 
+        // 3. Vérifier la disponibilité des matières premières
+        List<BillOfMaterial> bom = product.getBillOfMaterials();
+
+        if (bom == null || bom.isEmpty()) {
+            throw new IllegalStateException(
+                    "Impossible de créer l'ordre de production. Le produit n'a pas de nomenclature (BOM) définie."
+            );
+        }
+
+        // Vérifier chaque matière première
+        for (BillOfMaterial bomItem : bom) {
+            RawMaterial material = bomItem.getMaterial();
+            Integer quantiteNecessaire = bomItem.getQuantity() * quantiteAProduire;
+            Integer stockDisponible = material.getStock() != null ? material.getStock() : 0;
+
+            // Si une matière est insuffisante, on arrête immédiatement
+            if (stockDisponible < quantiteNecessaire) {
+                // Créer l'ordre avec statut EN_ATTENTE
+                productionOrder.setStatus(ProductionOrderStatus.EN_ATTENTE);
+
+                // Calculer les dates estimées
+                if (productionOrder.getStartDate() != null) {
+                    int estimatedDays = quantiteAProduire * product.getProductionTime();
+                    productionOrder.setEndDate(productionOrder.getStartDate().plusDays(estimatedDays));
+                }
+
+                // Sauvegarder l'ordre
+                productionOrderRepository.save(productionOrder);
+
+                // Lever l'exception
+                throw new InsufficientStockException(
+                        "Stock insuffisant pour " + material.getName() +
+                                " - Nécessaire: " + quantiteNecessaire + " " + material.getUnit() +
+                                ", Disponible: " + stockDisponible + " " + material.getUnit()
+                );
+            }
+        }
+
+        // CAS 2.B : Stock de matières premières suffisant
+        // Déduire le stock de chaque matière première
+        for (BillOfMaterial bomItem : bom) {
+            RawMaterial material = bomItem.getMaterial();
+            Integer quantiteNecessaire = bomItem.getQuantity() * quantiteAProduire;
+
+            material.setStock(material.getStock() - quantiteNecessaire);
+            rawMaterialRepository.save(material);
+        }
+
+        // Statut = EN_PRODUCTION
+        productionOrder.setStatus(ProductionOrderStatus.EN_PRODUCTION);
+
+        // Calculer les dates de production
+        if (productionOrder.getStartDate() == null) {
+            productionOrder.setStartDate(LocalDate.now());
+        }
+
+        int estimatedDays = quantiteAProduire * product.getProductionTime();
+        productionOrder.setEndDate(productionOrder.getStartDate().plusDays(estimatedDays));
+
+        ProductionOrder savedOrder = productionOrderRepository.save(productionOrder);
         return productionOrderMapper.toDTO(savedOrder);
     }
 

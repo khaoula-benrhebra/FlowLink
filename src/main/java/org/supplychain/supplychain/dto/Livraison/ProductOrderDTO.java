@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductOrderDTO {
 
+    private Long orderId;
+
     @NotNull(message = "L'ID du produit est obligatoire")
     private Long productId;
 

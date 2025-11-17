@@ -1,4 +1,4 @@
-package org.supplychain.supplychain.mapper.modelDelivery;
+package org.supplychain.supplychain.mapper.Livraison;
 
 import org.mapstruct.*;
 import org.supplychain.supplychain.dto.Livraison.DeliveryDTO;

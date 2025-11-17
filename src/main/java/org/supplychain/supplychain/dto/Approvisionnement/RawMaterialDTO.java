@@ -15,7 +15,6 @@ public class RawMaterialDTO {
     @NotBlank(message = "Le nom de la matière première est obligatoire")
     private String name;
 
-    private String description;
 
     @NotNull(message = "Le stock est obligatoire")
     @Min(value = 0, message = "Le stock ne peut pas être négatif")

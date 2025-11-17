@@ -38,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductOrderMapper productOrderMapper;
 
     @Override
-    public OrderDTO createOrder(OrderDTO orderDTO, List<ProductOrderDTO> productOrders) {
+    public OrderDTO createOrder(OrderDTO orderDTO) {
         Customer customer = customerRepository.findById(orderDTO.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", orderDTO.getCustomerId()));
 
@@ -46,9 +46,11 @@ public class OrderServiceImpl implements OrderService {
         order.setCustomer(customer);
         order.setStatus(orderDTO.getStatus());
 
-        List<ProductOrder> orderLines = new ArrayList<>();
+    List<ProductOrder> orderLines = new ArrayList<>();
 
-        for (ProductOrderDTO lineDTO : productOrders) {
+    List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
+
+    for (ProductOrderDTO lineDTO : productOrders) {
             Product product = productRepository.findById(lineDTO.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
 
@@ -73,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO updateOrder(Long id, OrderDTO orderDTO, List<ProductOrderDTO> productOrders) {
+    public OrderDTO updateOrder(Long id, OrderDTO orderDTO) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
 
@@ -88,9 +90,11 @@ public class OrderServiceImpl implements OrderService {
         existingOrder.setCustomer(customer);
         existingOrder.setStatus(orderDTO.getStatus());
 
-        existingOrder.getProductOrders().clear();
+    existingOrder.getProductOrders().clear();
 
-        for (ProductOrderDTO lineDTO : productOrders) {
+    List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
+
+    for (ProductOrderDTO lineDTO : productOrders) {
             Product product = productRepository.findById(lineDTO.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
 
@@ -133,7 +137,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public Page<OrderDTO> getOrdersByStatus(OrderStatus status, Pageable pageable) {
-        Page<Order> orders = orderRepository.findByStatus(status, pageable);
+        // Changer findByStatus par findOrdersByStatus
+        Page<Order> orders = orderRepository.findOrdersByStatus(status, pageable);
         return orders.map(orderMapper::toDTO);
     }
 

@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SupplyOrderLineDTO {
 
-    @NotNull(message = "L'ID de la commande d'approvisionnement est obligatoire")
+    //@NotNull(message = "L'ID de la commande d'approvisionnement est obligatoire")
     private Long supplyOrderId;
 
     @NotNull(message = "L'ID de la matière première est obligatoire")

@@ -1,4 +1,4 @@
-package org.supplychain.supplychain.service.Approvisionnement;
+package org.supplychain.supplychain.service.approvisionnement;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
