@@ -24,9 +24,9 @@ pipeline {
                     try {
                         sh 'chmod +x ./mvnw && ./mvnw verify'
                     } catch (Exception e) {
-                        echo "⚠️ Code coverage is below 50% threshold!"
+                        echo "⚠️ Code coverage is below 40% threshold!"
                         currentBuild.result = 'FAILURE'
-                        error("Build failed: Code coverage < 50%")
+                        error("Build failed: Code coverage < 40%")
                     }
                 }
             }
