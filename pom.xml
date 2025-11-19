@@ -203,6 +203,16 @@
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
+                                    <excludes>
+                                        <exclude>**/dto/**</exclude>
+                                        <exclude>**/model/**</exclude>
+                                        <exclude>**/mapper/**Impl</exclude>
+                                        <exclude>**/config/**</exclude>
+                                        <exclude>**/*Application</exclude>
+                                        <exclude>**/enums/**</exclude>
+                                        <exclude>**/exception/**</exclude>
+                                        <exclude>**/response/**</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
