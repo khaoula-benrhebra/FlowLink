@@ -44,13 +44,13 @@ public class Product extends BaseEntity {
     private String unit;
 
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BillOfMaterial> billOfMaterials = new ArrayList<>();
 
     @OneToMany(mappedBy = "product")
     private List<ProductionOrder> productionOrders = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductOrder> productOrders = new ArrayList<>();
 
 

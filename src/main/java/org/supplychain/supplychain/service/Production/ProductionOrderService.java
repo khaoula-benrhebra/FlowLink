@@ -1,4 +1,4 @@
-package org.supplychain.supplychain.service.Production.ProductionOrder;
+package org.supplychain.supplychain.service.Production;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Production.ProductionOrderDTO;
 import org.supplychain.supplychain.enums.ProductionOrderStatus;
 import org.supplychain.supplychain.response.SuccessResponse;
-import org.supplychain.supplychain.service.Production.ProductionOrder.ProductionOrderService;
+import org.supplychain.supplychain.service.Production.ProductionOrderService;
 
 @RestController
 @RequestMapping("/api/production-orders")

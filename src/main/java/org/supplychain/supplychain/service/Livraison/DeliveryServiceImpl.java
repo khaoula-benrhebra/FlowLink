@@ -34,13 +34,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new DuplicateResourceException("Delivery already exists for order ID: " + deliveryDTO.getOrderId());
         }
 
-        Delivery delivery = new Delivery();
+        Delivery delivery = deliveryMapper.toEntity(deliveryDTO);
         delivery.setOrder(order);
-        delivery.setDeliveryAddress(deliveryDTO.getDeliveryAddress());
-        delivery.setDriver(deliveryDTO.getDriver());
-        delivery.setStatus(deliveryDTO.getStatus());
-        delivery.setDeliveryDate(deliveryDTO.getDeliveryDate());
-        delivery.setDeliveryCost(deliveryDTO.getDeliveryCost());
 
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
@@ -55,12 +50,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         Order order = orderRepository.findById(deliveryDTO.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", deliveryDTO.getOrderId()));
 
+        deliveryMapper.updateEntityFromDTO(deliveryDTO, existingDelivery);
         existingDelivery.setOrder(order);
-        existingDelivery.setDeliveryAddress(deliveryDTO.getDeliveryAddress());
-        existingDelivery.setDriver(deliveryDTO.getDriver());
-        existingDelivery.setStatus(deliveryDTO.getStatus());
-        existingDelivery.setDeliveryDate(deliveryDTO.getDeliveryDate());
-        existingDelivery.setDeliveryCost(deliveryDTO.getDeliveryCost());
 
         Delivery updatedDelivery = deliveryRepository.save(existingDelivery);
 

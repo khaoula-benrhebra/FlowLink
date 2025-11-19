@@ -51,15 +51,15 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         List<SupplyOrderLine> orderLines = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
+        SupplyOrder savedOrder = supplyOrderRepository.save(supplyOrder);
+
         for (SupplyOrderLineDTO lineDTO : supplyOrderDTO.getOrderLines()) {
             RawMaterial rawMaterial = rawMaterialRepository.findById(lineDTO.getRawMaterialId())
                     .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", lineDTO.getRawMaterialId()));
 
-            SupplyOrderLine orderLine = new SupplyOrderLine();
-            orderLine.setSupplyOrder(supplyOrder);
+            SupplyOrderLine orderLine = supplyOrderLineMapper.toEntity(lineDTO);
+            orderLine.setSupplyOrder(savedOrder);
             orderLine.setRawMaterial(rawMaterial);
-            orderLine.setQuantity(lineDTO.getQuantity());
-            orderLine.setUnitPrice(lineDTO.getUnitPrice());
 
             orderLines.add(orderLine);
 
@@ -67,13 +67,12 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
             totalAmount = totalAmount.add(lineTotal);
         }
 
-        supplyOrder.setOrderLines(orderLines);
-        supplyOrder.setTotalAmount(totalAmount);
+        supplyOrderLineRepository.saveAll(orderLines);
+        savedOrder.setTotalAmount(totalAmount);
+        SupplyOrder updatedOrder = supplyOrderRepository.save(savedOrder);
 
-        SupplyOrder savedOrder = supplyOrderRepository.save(supplyOrder);
-
-        SupplyOrderDTO result = supplyOrderMapper.toDTO(savedOrder);
-        result.setOrderLines(supplyOrderLineMapper.toDTOList(savedOrder.getOrderLines()));
+        SupplyOrderDTO result = supplyOrderMapper.toDTO(updatedOrder);
+        result.setOrderLines(supplyOrderLineMapper.toDTOList(updatedOrder.getOrderLines()));
         return result;
     }
 
@@ -90,26 +89,28 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         existingOrder.setOrderDate(supplyOrderDTO.getOrderDate());
         existingOrder.setStatus(supplyOrderDTO.getStatus());
 
+        // Supprimer les anciennes lignes via orphanRemoval (vider la collection)
         existingOrder.getOrderLines().clear();
 
+        List<SupplyOrderLine> newOrderLines = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (SupplyOrderLineDTO lineDTO : supplyOrderDTO.getOrderLines()) {
             RawMaterial rawMaterial = rawMaterialRepository.findById(lineDTO.getRawMaterialId())
                     .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", lineDTO.getRawMaterialId()));
 
-            SupplyOrderLine orderLine = new SupplyOrderLine();
+            SupplyOrderLine orderLine = supplyOrderLineMapper.toEntity(lineDTO);
             orderLine.setSupplyOrder(existingOrder);
             orderLine.setRawMaterial(rawMaterial);
-            orderLine.setQuantity(lineDTO.getQuantity());
-            orderLine.setUnitPrice(lineDTO.getUnitPrice());
 
-            existingOrder.getOrderLines().add(orderLine);
+            newOrderLines.add(orderLine);
 
             BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
             totalAmount = totalAmount.add(lineTotal);
         }
 
+        // Ajouter les nouvelles lignes à la collection
+        existingOrder.getOrderLines().addAll(newOrderLines);
         existingOrder.setTotalAmount(totalAmount);
 
         SupplyOrder updatedOrder = supplyOrderRepository.save(existingOrder);

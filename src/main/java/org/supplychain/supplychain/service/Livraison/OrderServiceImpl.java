@@ -10,6 +10,7 @@ import org.supplychain.supplychain.dto.Livraison.ProductOrderDTO;
 import org.supplychain.supplychain.enums.OrderStatus;
 import org.supplychain.supplychain.exception.ResourceInUseException;
 import org.supplychain.supplychain.exception.ResourceNotFoundException;
+import org.supplychain.supplychain.exception.InsufficientStockException;
 import org.supplychain.supplychain.mapper.Livraison.OrderMapper;
 import org.supplychain.supplychain.mapper.Livraison.ProductOrderMapper;
 import org.supplychain.supplychain.model.Customer;
@@ -42,36 +43,78 @@ public class OrderServiceImpl implements OrderService {
         Customer customer = customerRepository.findById(orderDTO.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", orderDTO.getCustomerId()));
 
-        Order order = new Order();
+        Order order = orderMapper.toEntity(orderDTO);
         order.setCustomer(customer);
-        order.setStatus(orderDTO.getStatus());
 
-    List<ProductOrder> orderLines = new ArrayList<>();
+        List<ProductOrder> orderLines = new ArrayList<>();
+        List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
 
-    List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
+        // Vérifier le stock pour tous les produits
+        boolean allProductsInStock = true;
 
-    for (ProductOrderDTO lineDTO : productOrders) {
+        for (ProductOrderDTO lineDTO : productOrders) {
             Product product = productRepository.findById(lineDTO.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
 
-            ProductOrder productOrder = new ProductOrder();
-            productOrder.setOrder(order);
-            productOrder.setProduct(product);
-            productOrder.setQuantity(lineDTO.getQuantity());
-            productOrder.setUnitPrice(lineDTO.getUnitPrice());
-
-            BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
-            productOrder.setTotalPrice(lineTotal);
-
-            orderLines.add(productOrder);
+            // Vérifier si le stock est suffisant
+            if (product.getStock() < lineDTO.getQuantity()) {
+                allProductsInStock = false;
+                break;
+            }
         }
 
-        order.setProductOrders(orderLines);
-
+        // Sauvegarder la commande d'abord
         Order savedOrder = orderRepository.save(order);
 
-        OrderDTO result = orderMapper.toDTO(savedOrder);
-        return result;
+        // Déterminer le statut et gérer le stock
+        if (allProductsInStock) {
+            savedOrder.setStatus(OrderStatus.EN_ROUTE);
+
+            // Déduire le stock pour chaque produit
+            for (ProductOrderDTO lineDTO : productOrders) {
+                Product product = productRepository.findById(lineDTO.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
+
+                // Déduire le stock
+                int newStock = product.getStock() - lineDTO.getQuantity();
+                product.setStock(newStock);
+                productRepository.save(product);
+
+                // Créer la ligne de commande via le mapper
+                ProductOrder productOrder = productOrderMapper.toEntity(lineDTO);
+                productOrder.setOrder(savedOrder);
+                productOrder.setProduct(product);
+
+                BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
+                productOrder.setTotalPrice(lineTotal);
+
+                orderLines.add(productOrder);
+            }
+        } else {
+            savedOrder.setStatus(OrderStatus.EN_PREPARATION);
+
+            // Créer les lignes de commande sans déduire le stock
+            for (ProductOrderDTO lineDTO : productOrders) {
+                Product product = productRepository.findById(lineDTO.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
+
+                ProductOrder productOrder = productOrderMapper.toEntity(lineDTO);
+                productOrder.setOrder(savedOrder);
+                productOrder.setProduct(product);
+
+                BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
+                productOrder.setTotalPrice(lineTotal);
+
+                orderLines.add(productOrder);
+            }
+        }
+
+        // Sauvegarder toutes les lignes via le repository
+        productOrderRepository.saveAll(orderLines);
+        savedOrder.setProductOrders(orderLines);
+        Order finalOrder = orderRepository.save(savedOrder);
+
+        return orderMapper.toDTO(finalOrder);
     }
 
     @Override
@@ -88,28 +131,60 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", orderDTO.getCustomerId()));
 
         existingOrder.setCustomer(customer);
-        existingOrder.setStatus(orderDTO.getStatus());
 
-    existingOrder.getProductOrders().clear();
+        // Vérifier le stock pour tous les produits
+        boolean allProductsInStock = true;
+        List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
 
-    List<ProductOrderDTO> productOrders = orderDTO.getProductOrders();
-
-    for (ProductOrderDTO lineDTO : productOrders) {
+        for (ProductOrderDTO lineDTO : productOrders) {
             Product product = productRepository.findById(lineDTO.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
 
-            ProductOrder productOrder = new ProductOrder();
+            if (product.getStock() < lineDTO.getQuantity()) {
+                allProductsInStock = false;
+                break;
+            }
+        }
+
+        // Supprimer les anciennes lignes de commande via orphanRemoval (vider la collection)
+        existingOrder.getProductOrders().clear();
+
+        // Déterminer le statut et gérer le stock
+        if (allProductsInStock) {
+            existingOrder.setStatus(OrderStatus.EN_ROUTE);
+
+            // Déduire le stock pour chaque produit
+            for (ProductOrderDTO lineDTO : productOrders) {
+                Product product = productRepository.findById(lineDTO.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
+
+                // Déduire le stock
+                int newStock = product.getStock() - lineDTO.getQuantity();
+                product.setStock(newStock);
+                productRepository.save(product);
+            }
+        } else {
+            existingOrder.setStatus(OrderStatus.EN_PREPARATION);
+        }
+
+        // Créer les nouvelles lignes de commande
+        List<ProductOrder> newOrderLines = new ArrayList<>();
+        for (ProductOrderDTO lineDTO : productOrders) {
+            Product product = productRepository.findById(lineDTO.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", lineDTO.getProductId()));
+
+            ProductOrder productOrder = productOrderMapper.toEntity(lineDTO);
             productOrder.setOrder(existingOrder);
             productOrder.setProduct(product);
-            productOrder.setQuantity(lineDTO.getQuantity());
-            productOrder.setUnitPrice(lineDTO.getUnitPrice());
 
             BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
             productOrder.setTotalPrice(lineTotal);
 
-            existingOrder.getProductOrders().add(productOrder);
+            newOrderLines.add(productOrder);
         }
 
+        // Ajouter les nouvelles lignes à la collection
+        existingOrder.getProductOrders().addAll(newOrderLines);
         Order updatedOrder = orderRepository.save(existingOrder);
 
         return orderMapper.toDTO(updatedOrder);
@@ -124,9 +199,19 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceInUseException("Cannot cancel an order that is already shipped or delivered");
         }
 
+        // Si la commande était EN_ROUTE, remettre le stock
+        if (order.getStatus() == OrderStatus.EN_ROUTE) {
+            for (ProductOrder productOrder : order.getProductOrders()) {
+                Product product = productOrder.getProduct();
+                product.setStock(product.getStock() + productOrder.getQuantity());
+                productRepository.save(product);
+            }
+        }
+
         orderRepository.deleteById(id);
     }
 
+    // Les autres méthodes restent inchangées...
     @Override
     @Transactional(readOnly = true)
     public Page<OrderDTO> getAllOrders(Pageable pageable) {
@@ -137,7 +222,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public Page<OrderDTO> getOrdersByStatus(OrderStatus status, Pageable pageable) {
-        // Changer findByStatus par findOrdersByStatus
         Page<Order> orders = orderRepository.findOrdersByStatus(status, pageable);
         return orders.map(orderMapper::toDTO);
     }

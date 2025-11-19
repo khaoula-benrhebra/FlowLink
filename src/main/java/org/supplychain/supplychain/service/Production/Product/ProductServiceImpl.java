@@ -11,6 +11,7 @@ import org.supplychain.supplychain.exception.DuplicateResourceException;
 import org.supplychain.supplychain.exception.ResourceInUseException;
 import org.supplychain.supplychain.exception.ResourceNotFoundException;
 import org.supplychain.supplychain.mapper.Production.ProductMapper;
+import org.supplychain.supplychain.mapper.Production.BillOfMaterialMapper;
 import org.supplychain.supplychain.model.BillOfMaterial;
 import org.supplychain.supplychain.model.Product;
 import org.supplychain.supplychain.model.RawMaterial;
@@ -29,6 +30,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final BillOfMaterialRepository bomRepository;
+    private final BillOfMaterialMapper bomMapper;
     private final RawMaterialRepository rawMaterialRepository;
     private final ProductionOrderRepository productionOrderRepository;
 
@@ -58,16 +60,15 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Matière première non trouvée avec l'ID : " + bomDTO.getMaterialId()));
 
-            // Créer l'entrée BOM
-            BillOfMaterial bom = new BillOfMaterial();
+            // Créer l'entrée BOM via le mapper
+            BillOfMaterial bom = bomMapper.toEntity(bomDTO);
             bom.setProduct(savedProduct);
             bom.setMaterial(rawMaterial);
-            bom.setQuantity(bomDTO.getQuantity());
 
             bomList.add(bom);
         }
 
-        // Sauvegarder le BOM
+        // Sauvegarder le BOM via le repository
         bomRepository.saveAll(bomList);
         savedProduct.setBillOfMaterials(bomList);
 
@@ -90,9 +91,8 @@ public class ProductServiceImpl implements ProductService {
 
         // Mettre à jour le BOM si fourni
         if (productDTO.getBillOfMaterials() != null && !productDTO.getBillOfMaterials().isEmpty()) {
-            // Supprimer l'ancien BOM
-            bomRepository.deleteByProduct_IdProduct(id);
-            bomRepository.flush();
+            // Supprimer l'ancien BOM via orphanRemoval (vider la collection)
+            existingProduct.getBillOfMaterials().clear();
 
             // Créer le nouveau BOM
             List<BillOfMaterial> bomList = new ArrayList<>();
@@ -102,18 +102,16 @@ public class ProductServiceImpl implements ProductService {
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 "Matière première non trouvée avec l'ID : " + bomDTO.getMaterialId()));
 
-                // Créer l'entrée BOM
-                BillOfMaterial bom = new BillOfMaterial();
+                // Créer l'entrée BOM via le mapper
+                BillOfMaterial bom = bomMapper.toEntity(bomDTO);
                 bom.setProduct(existingProduct);
                 bom.setMaterial(rawMaterial);
-                bom.setQuantity(bomDTO.getQuantity());
 
                 bomList.add(bom);
             }
 
-            // Sauvegarder le nouveau BOM
-            bomRepository.saveAll(bomList);
-            existingProduct.setBillOfMaterials(bomList);
+            // Ajouter les nouvelles lignes à la collection
+            existingProduct.getBillOfMaterials().addAll(bomList);
         }
 
         Product updatedProduct = productRepository.save(existingProduct);
