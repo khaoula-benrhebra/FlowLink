@@ -203,16 +203,26 @@
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
+                                    <excludes>
+                                        <exclude>**/dto/**</exclude>
+                                        <exclude>**/model/**</exclude>
+                                        <exclude>**/mapper/*Impl.class</exclude>
+                                        <exclude>**/config/**</exclude>
+                                        <exclude>**/*Application.class</exclude>
+                                        <exclude>**/enums/**</exclude>
+                                        <exclude>**/exception/**</exclude>
+                                        <exclude>**/response/**</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.36</minimum>
+                                            <minimum>0.40</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
-                            <haltOnFailure>false</haltOnFailure>
+                            <haltOnFailure>true</haltOnFailure>
                         </configuration>
                     </execution>
                 </executions>
