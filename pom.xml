@@ -202,15 +202,12 @@
                         <configuration>
                             <rules>
                                 <rule>
-                                    <element>PACKAGE</element>
-                                    <excludes>
-                                        <exclude>*Test</exclude>
-                                    </excludes>
+                                    <element>BUNDLE</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.40</minimum> <!-- 50% minimum coverage -->
+                                            <minimum>0.40</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
