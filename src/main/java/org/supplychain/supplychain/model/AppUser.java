@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 import org.supplychain.supplychain.enums.Role;
 
 @Entity
-@Table(name = "users")
+@Table(name = "app_users")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity {
+public class AppUser extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,12 @@
 package org.supplychain.supplychain.controller.approvisionnement;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +26,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/raw-materials")
 @RequiredArgsConstructor
+@Tag(name = "Matières Premières", description = "API de gestion des matières premières")
 public class RawMaterialController {
 
     private final RawMaterialService rawMaterialService;
 
-    //Ajouter une matière première
-
+    @Operation(summary = "Créer une matière première", description = "Ajoute une nouvelle matière première au système")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Matière première créée avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides")
+    })
     @PostMapping
     public ResponseEntity<SuccessResponse<RawMaterialDTO>> createRawMaterial(
+            @Parameter(description = "Données de la matière première à créer", required = true)
             @Valid @RequestBody RawMaterialDTO rawMaterialDTO,
             HttpServletRequest request) {
 
@@ -42,11 +54,17 @@ public class RawMaterialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Modifier une matière première
-
+    @Operation(summary = "Modifier une matière première", description = "Met à jour les informations d'une matière première existante")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Matière première modifiée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Matière première non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Données invalides")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse<RawMaterialDTO>> updateRawMaterial(
+            @Parameter(description = "ID de la matière première", required = true)
             @PathVariable Long id,
+            @Parameter(description = "Nouvelles données de la matière première", required = true)
             @Valid @RequestBody RawMaterialDTO rawMaterialDTO,
             HttpServletRequest request) {
 
@@ -62,10 +80,15 @@ public class RawMaterialController {
         return ResponseEntity.ok(response);
     }
 
-    // Supprimer une matière première si elle n'est pas utilisée
-
+    @Operation(summary = "Supprimer une matière première", description = "Supprime une matière première si elle n'est pas utilisée")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Matière première supprimée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Matière première non trouvée"),
+            @ApiResponse(responseCode = "409", description = "Matière première utilisée, suppression impossible")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<SuccessResponse<Void>> deleteRawMaterial(
+            @Parameter(description = "ID de la matière première à supprimer", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
 
@@ -81,14 +104,16 @@ public class RawMaterialController {
         return ResponseEntity.ok(response);
     }
 
-    // Consulter la liste complète des matières premières avec pagination
-
+    @Operation(summary = "Lister toutes les matières premières", description = "Récupère la liste paginée de toutes les matières premières")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    })
     @GetMapping
     public ResponseEntity<SuccessResponse<Page<RawMaterialDTO>>> getAllRawMaterials(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction,
+            @Parameter(description = "Numéro de page (commence à 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
+            @Parameter(description = "Direction du tri (asc ou desc)") @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -106,8 +131,10 @@ public class RawMaterialController {
         return ResponseEntity.ok(response);
     }
 
-    //Consulter les matières dont le stock est inférieur au seuil critique
-
+    @Operation(summary = "Matières premières en rupture", description = "Récupère les matières premières dont le stock est inférieur au seuil minimum")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des matières en rupture récupérée avec succès")
+    })
     @GetMapping("/below-min-stock")
     public ResponseEntity<SuccessResponse<List<RawMaterialDTO>>> getMaterialsBelowMinStock(
             HttpServletRequest request) {
@@ -124,10 +151,14 @@ public class RawMaterialController {
         return ResponseEntity.ok(response);
     }
 
-    // MéthodeRécupérer une matière première par ID
-
+    @Operation(summary = "Récupérer une matière première", description = "Récupère les détails d'une matière première par son ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Matière première trouvée"),
+            @ApiResponse(responseCode = "404", description = "Matière première non trouvée")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<SuccessResponse<RawMaterialDTO>> getRawMaterialById(
+            @Parameter(description = "ID de la matière première", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
 

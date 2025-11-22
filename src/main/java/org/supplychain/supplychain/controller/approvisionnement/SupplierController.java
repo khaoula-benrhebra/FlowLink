@@ -1,5 +1,10 @@
 package org.supplychain.supplychain.controller.approvisionnement;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +22,20 @@ import org.supplychain.supplychain.service.approvisionnement.SupplierService;
 @RestController
 @RequestMapping("/api/suppliers")
 @RequiredArgsConstructor
+@Tag(name = "Fournisseurs", description = "API de gestion des fournisseurs")
 public class SupplierController {
 
     private final SupplierService supplierService;
 
 
+    @Operation(summary = "Créer un fournisseur", description = "Ajoute un nouveau fournisseur au système")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Fournisseur créé avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données invalides")
+    })
     @PostMapping
     public ResponseEntity<SuccessResponse<SupplierDTO>> createSupplier(
+            @Parameter(description = "Données du fournisseur à créer", required = true)
             @Valid @RequestBody SupplierDTO supplierDTO,
             HttpServletRequest request) {
 
@@ -40,9 +52,16 @@ public class SupplierController {
     }
 
 
+    @Operation(summary = "Modifier un fournisseur", description = "Met à jour les informations d'un fournisseur existant")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fournisseur modifié avec succès"),
+            @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse<SupplierDTO>> updateSupplier(
+            @Parameter(description = "ID du fournisseur", required = true)
             @PathVariable Long id,
+            @Parameter(description = "Nouvelles données du fournisseur", required = true)
             @Valid @RequestBody SupplierDTO supplierDTO,
             HttpServletRequest request) {
 
@@ -59,8 +78,14 @@ public class SupplierController {
     }
 
 
+    @Operation(summary = "Supprimer un fournisseur", description = "Supprime un fournisseur du système")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fournisseur supprimé avec succès"),
+            @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<SuccessResponse<Void>> deleteSupplier(
+            @Parameter(description = "ID du fournisseur à supprimer", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
 
@@ -77,12 +102,16 @@ public class SupplierController {
     }
 
 
+    @Operation(summary = "Lister tous les fournisseurs", description = "Récupère la liste paginée de tous les fournisseurs")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    })
     @GetMapping
     public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> getAllSuppliers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction,
+            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
+            @Parameter(description = "Direction du tri") @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -101,13 +130,18 @@ public class SupplierController {
     }
 
 
+    @Operation(summary = "Rechercher des fournisseurs", description = "Recherche des fournisseurs par nom")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recherche effectuée avec succès")
+    })
     @GetMapping("/search")
     public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> searchSuppliersByName(
+            @Parameter(description = "Nom du fournisseur à rechercher", required = true)
             @RequestParam String name,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction,
+            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
+            @Parameter(description = "Direction du tri") @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -126,8 +160,14 @@ public class SupplierController {
     }
 
 
+    @Operation(summary = "Récupérer un fournisseur", description = "Récupère les détails d'un fournisseur par son ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fournisseur trouvé"),
+            @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<SuccessResponse<SupplierDTO>> getSupplierById(
+            @Parameter(description = "ID du fournisseur", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
 

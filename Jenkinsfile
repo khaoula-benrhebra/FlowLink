@@ -50,9 +50,23 @@ pipeline {
                 }
             }
         }
-    }
 
-    //il faut ajouter 2 analyse jacococ et sonarqube
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'chmod +x ./mvnw && ./mvnw sonar:sonar -Dsonar.projectKey=FlowLink'
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    }
 
     post {
         always {
