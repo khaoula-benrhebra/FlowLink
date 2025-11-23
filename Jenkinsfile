@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    MVN_CMD = 'mvn'
+    MVN_CMD = './mvnw'
     MAVEN_OPTS = '-Xmx1g'
   }
 
@@ -17,6 +17,7 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+        sh 'chmod +x mvnw'
       }
     }
 
