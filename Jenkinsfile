@@ -50,9 +50,6 @@ pipeline {
     }
 
     stage('SonarQube Analysis') {
-      when {
-        expression { http://localhost:9000 && sqa_77975c42e18c17a361402141babf6f69818d3911 }
-      }
       steps {
         sh "${MVN_CMD} -B sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=sqa_77975c42e18c17a361402141babf6f69818d3911"
       }
