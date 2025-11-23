@@ -1,16 +1,9 @@
-// Declarative Jenkins pipeline for Digital Logistics
-// - Builds, runs unit tests, generates JaCoCo report
-// - Optionally runs SonarQube analysis when SONAR_HOST and SONAR_TOKEN are provided
-
 pipeline {
-  // Run on any available node (avoid Docker agent because controller/node may not have Docker installed)
   agent any
 
   environment {
-    MVN_CMD = './mvnw'
+    MVN_CMD = 'mvn'
     MAVEN_OPTS = '-Xmx1g'
-    // Optional environment variables to provide in Jenkins credentials or job config:
-    // SONAR_HOST, SONAR_TOKEN
   }
 
   options {
@@ -24,9 +17,6 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
-        // Ensure the Maven wrapper is executable on Linux agents
-        sh 'chmod +x mvnw || true'
-        sh 'ls -la mvnw || true'
       }
     }
 
@@ -44,7 +34,6 @@ pipeline {
 
     stage('JaCoCo Report') {
       steps {
-        // Generate HTML coverage report
         sh "${MVN_CMD} -B jacoco:report"
       }
     }
@@ -64,13 +53,8 @@ pipeline {
 
   post {
     always {
-      // Publish JUnit results
       junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-
-      // Archive JaCoCo HTML report and built artifacts
       archiveArtifacts artifacts: 'target/*.jar, target/site/jacoco/**', allowEmptyArchive: true
-
-      // Clean workspace to avoid filling Jenkins disk
       cleanWs()
     }
 
