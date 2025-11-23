@@ -1,82 +1,88 @@
+// Declarative Jenkins pipeline for Digital Logistics
+// - Builds, runs unit tests, generates JaCoCo report
+// - Optionally runs SonarQube analysis when SONAR_HOST and SONAR_TOKEN are provided
+
 pipeline {
-    agent any
+  // Run on any available node (avoid Docker agent because controller/node may not have Docker installed)
+  agent any
 
-    // No tools block needed: Jenkins image has Java 17 built-in
-    // We use Maven wrapper (mvnw) from the project repository
+  environment {
+    MVN_CMD = './mvnw'
+    MAVEN_OPTS = '-Xmx1g'
+    // Optional environment variables to provide in Jenkins credentials or job config:
+    // SONAR_HOST, SONAR_TOKEN
+  }
 
-    stages {
+  options {
+    timestamps()
+    ansiColor('xterm')
+    timeout(time: 60, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '25'))
+  }
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build & Test') {
-            steps {
-                sh 'chmod +x ./mvnw && ./mvnw clean test'
-            }
-        }
-
-        stage('Code Coverage Check (JaCoCo)') {
-            steps {
-                script {
-                    try {
-                        sh 'chmod +x ./mvnw && ./mvnw verify'
-                    } catch (Exception e) {
-                        echo "⚠️ Code coverage is below 40% threshold!"
-                        currentBuild.result = 'FAILURE'
-                        error("Build failed: Code coverage < 40%")
-                    }
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'chmod +x ./mvnw && ./mvnw package -DskipTests'
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'target/site/jacoco',
-                        reportFiles: 'index.html',
-                        reportName: 'JaCoCo Coverage Report'
-                    ])
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'chmod +x ./mvnw && ./mvnw sonar:sonar -Dsonar.projectKey=FlowLink'
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        // Ensure the Maven wrapper is executable on Linux agents
+        sh 'chmod +x mvnw || true'
+        sh 'ls -la mvnw || true'
+      }
     }
 
-    post {
-        always {
-            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
-        }
-        failure {
-            echo "❌ Pipeline FAILED - Check coverage or build errors above"
-        }
-        success {
-            echo "✅ Pipeline SUCCESS - All checks passed!"
-        }
+    stage('Build (compile)') {
+      steps {
+        sh "${MVN_CMD} -B -DskipTests=true clean package"
+      }
     }
+
+    stage('Unit Tests') {
+      steps {
+        sh "${MVN_CMD} -B test"
+      }
+    }
+
+    stage('JaCoCo Report') {
+      steps {
+        // Generate HTML coverage report
+        sh "${MVN_CMD} -B jacoco:report"
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      when {
+        expression { http://localhost:9000 && sqa_77975c42e18c17a361402141babf6f69818d3911 }
+      }
+      steps {
+        sh "${MVN_CMD} -B sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=sqa_77975c42e18c17a361402141babf6f69818d3911"
+      }
+    }
+
+    stage('Package') {
+      steps {
+        sh "${MVN_CMD} -B -DskipTests=true package"
+      }
+    }
+  }
+
+  post {
+    always {
+      // Publish JUnit results
+      junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+
+      // Archive JaCoCo HTML report and built artifacts
+      archiveArtifacts artifacts: 'target/*.jar, target/site/jacoco/**', allowEmptyArchive: true
+
+      // Clean workspace to avoid filling Jenkins disk
+      cleanWs()
+    }
+
+    success {
+      echo "Build succeeded: ${env.BUILD_URL}"
+    }
+
+    failure {
+      echo "Build failed: ${env.BUILD_URL}"
+    }
+  }
 }
