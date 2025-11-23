@@ -41,7 +41,7 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        sh "${MVN_CMD} -B sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=sqa_77975c42e18c17a361402141babf6f69818d3911"
+        sh "${MVN_CMD} -B sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.token=sqa_77975c42e18c17a361402141babf6f69818d3911"
       }
     }
 
