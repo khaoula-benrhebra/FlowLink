@@ -56,6 +56,7 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         for (SupplyOrderLineDTO lineDTO : supplyOrderDTO.getOrderLines()) {
             RawMaterial rawMaterial = rawMaterialRepository.findById(lineDTO.getRawMaterialId())
                     .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", lineDTO.getRawMaterialId()));
+            rawMaterial.setStock(rawMaterial.getStock() + lineDTO.getQuantity()) ;
 
             SupplyOrderLine orderLine = supplyOrderLineMapper.toEntity(lineDTO);
             orderLine.setSupplyOrder(savedOrder);
