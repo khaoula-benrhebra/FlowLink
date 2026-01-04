@@ -1,4 +1,4 @@
-package org.supplychain.supplychain.service;
+package org.supplychain.supplychain.service.user;
 
 import org.supplychain.supplychain.dto.UserDTO;
 

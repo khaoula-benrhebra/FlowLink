@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Docker & ELK ###
+.env
+elasticsearch-backup*.tar.gz
+kibana-export.ndjson
+
+### Logs ###
+logs/
+*.log
+*.log.gz

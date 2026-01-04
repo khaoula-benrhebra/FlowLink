@@ -1,8 +1,12 @@
 package org.supplychain.supplychain.service.Livraison;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supplychain.supplychain.dto.Livraison.OrderDTO;
@@ -31,12 +35,19 @@ import java.util.List;
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger("BUSINESS");
+
     private final OrderRepository orderRepository;
     private final ProductOrderRepository productOrderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final ProductOrderMapper productOrderMapper;
+
+    private String getUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null) ? auth.getName() : "system";
+    }
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) {
@@ -59,6 +70,8 @@ public class OrderServiceImpl implements OrderService {
             // Vérifier si le stock est suffisant
             if (product.getStock() < lineDTO.getQuantity()) {
                 allProductsInStock = false;
+                logger.warn("Stock insuffisant - ORDER-{} - Produit: {} - Stock: {} - Demandé: {} - User: {}",
+                        order.getIdOrder(), product.getIdProduct(), product.getStock(), lineDTO.getQuantity(), getUser());
                 break;
             }
         }
@@ -113,6 +126,9 @@ public class OrderServiceImpl implements OrderService {
         productOrderRepository.saveAll(orderLines);
         savedOrder.setProductOrders(orderLines);
         Order finalOrder = orderRepository.save(savedOrder);
+
+        logger.info("Commande créée - ORDER-{} - Statut: {} - Client: {} - User: {}",
+                finalOrder.getIdOrder(), finalOrder.getStatus(), customer.getIdCustomer(), getUser());
 
         return orderMapper.toDTO(finalOrder);
     }
@@ -208,10 +224,11 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+        logger.info("Commande annulée - ORDER-{} - User: {}", id, getUser());
+
         orderRepository.deleteById(id);
     }
 
-    // Les autres méthodes restent inchangées...
     @Override
     @Transactional(readOnly = true)
     public Page<OrderDTO> getAllOrders(Pageable pageable) {

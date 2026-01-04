@@ -1,6 +1,7 @@
-package org.supplychain.supplychain.service;
+package org.supplychain.supplychain.service.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supplychain.supplychain.dto.UserDTO;
@@ -17,6 +18,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDTO createUser(UserDTO userDTO) {
@@ -25,6 +27,8 @@ public class UserServiceImpl implements UserService {
         }
 
         AppUser user = userMapper.toEntity(userDTO);
+        // Encoder le mot de passe
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         AppUser savedUser = userRepository.save(user);
         return userMapper.toDTO(savedUser);
     }
@@ -42,6 +46,10 @@ public class UserServiceImpl implements UserService {
                 });
 
         userMapper.updateEntityFromDTO(userDTO, existingUser);
+        // Encoder le nouveau mot de passe s'il a changé
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
         AppUser updatedUser = userRepository.save(existingUser);
         return userMapper.toDTO(updatedUser);
     }

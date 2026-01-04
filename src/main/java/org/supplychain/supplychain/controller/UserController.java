@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.UserDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
-import org.supplychain.supplychain.service.UserService;
+import org.supplychain.supplychain.service.user.UserService;
 
 @RestController
 @RequestMapping("/api/users")

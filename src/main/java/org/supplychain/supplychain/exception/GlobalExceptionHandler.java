@@ -1,8 +1,13 @@
 package org.supplychain.supplychain.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +20,14 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger("SECURITY");
+
+    private void logSecurity(String event, HttpServletRequest request, int status) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String user = (auth != null) ? auth.getName() : "anonymous";
+        logger.warn("{} - User: {} - Endpoint: {} - Status: {}", event, user, request.getRequestURI(), status);
+    }
 
     // --------------------- ResourceNotFoundException ---------------------
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -80,6 +93,24 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    // --------------------- BadCredentialsException ---------------------
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(
+            BadCredentialsException ex, HttpServletRequest request) {
+
+        logSecurity("Tentative connexion échouée", request, 401);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                "Email ou mot de passe incorrect",
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
     // --------------------- Validation errors ---------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -100,6 +131,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(),
                 validationErrors
         );
+
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
