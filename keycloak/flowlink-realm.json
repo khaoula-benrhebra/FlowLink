@@ -1,0 +1,869 @@
+{
+  "id": "flowlink-realm",
+  "realm": "flowlink-realm",
+  "displayName": "FlowLink Supply Chain",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>FlowLink - Gestion Supply Chain</span></div>",
+  "notBefore": 0,
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "roles": {
+    "realm": [
+      {
+        "id": "role-admin",
+        "name": "ADMIN",
+        "description": "Administrateur système avec accès complet",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-gestionnaire-approvisionnement",
+        "name": "GESTIONNAIRE_APPROVISIONNEMENT",
+        "description": "Gestionnaire d'approvisionnement - Gestion des commandes fournisseurs et stocks",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-responsable-achats",
+        "name": "RESPONSABLE_ACHATS",
+        "description": "Responsable des achats - Validation des commandes et gestion fournisseurs",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-superviseur-logistique",
+        "name": "SUPERVISEUR_LOGISTIQUE",
+        "description": "Superviseur logistique - Suivi des opérations logistiques",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-chef-production",
+        "name": "CHEF_PRODUCTION",
+        "description": "Chef de production - Gestion des ordres de fabrication",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-planificateur",
+        "name": "PLANIFICATEUR",
+        "description": "Planificateur - Planification de la production et des ressources",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-superviseur-production",
+        "name": "SUPERVISEUR_PRODUCTION",
+        "description": "Superviseur de production - Suivi des lignes de production",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-gestionnaire-commercial",
+        "name": "GESTIONNAIRE_COMMERCIAL",
+        "description": "Gestionnaire commercial - Gestion des clients et commandes",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-responsable-logistique",
+        "name": "RESPONSABLE_LOGISTIQUE",
+        "description": "Responsable logistique - Coordination des livraisons et entrepôts",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      },
+      {
+        "id": "role-superviseur-livraisons",
+        "name": "SUPERVISEUR_LIVRAISONS",
+        "description": "Superviseur des livraisons - Suivi des expéditions et livraisons",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "flowlink-realm"
+      }
+    ],
+    "client": {}
+  },
+  "groups": [
+    {
+      "id": "group-approvisionnement",
+      "name": "Approvisionnement",
+      "path": "/Approvisionnement",
+      "subGroups": []
+    },
+    {
+      "id": "group-production",
+      "name": "Production",
+      "path": "/Production",
+      "subGroups": []
+    },
+    {
+      "id": "group-logistique",
+      "name": "Logistique",
+      "path": "/Logistique",
+      "subGroups": []
+    },
+    {
+      "id": "group-commercial",
+      "name": "Commercial",
+      "path": "/Commercial",
+      "subGroups": []
+    }
+  ],
+  "defaultRole": {
+    "id": "default-role-id",
+    "name": "default-roles-flowlink-realm",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "clientRole": false,
+    "containerId": "flowlink-realm"
+  },
+  "requiredCredentials": [
+    "password"
+  ],
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "otpPolicyCodeReusable": false,
+  "otpSupportedApplications": [
+    "totpAppGoogleName",
+    "totpAppFreeOTPName"
+  ],
+  "scopeMappings": [],
+  "clientScopeMappings": {},
+  "clients": [
+    {
+      "id": "flowlink-backend-client-id",
+      "clientId": "flowlink-backend",
+      "name": "FlowLink Backend API",
+      "description": "Backend Resource Server for FlowLink Supply Chain API",
+      "rootUrl": "",
+      "adminUrl": "",
+      "baseUrl": "",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "flowlink-backend-secret-2024",
+      "redirectUris": [
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8081",
+        "http://localhost:3000",
+        "http://localhost:4200"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "post.logout.redirect.uris": "+",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "display.on.consent.screen": "false",
+        "backchannel.logout.revoke.offline.tokens": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "id": "roles-mapper-id",
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "email-mapper-id",
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "username-mapper-id",
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "id": "flowlink-frontend-client-id",
+      "clientId": "flowlink-frontend",
+      "name": "FlowLink Frontend Application",
+      "description": "Frontend SPA or Web Application for FlowLink",
+      "rootUrl": "http://localhost:3000",
+      "adminUrl": "",
+      "baseUrl": "/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:4200/*",
+        "http://localhost:8081/oauth2-redirect.html",
+        "http://localhost:8081/swagger-ui/oauth2-redirect.html",
+        "http://localhost:8081/swagger-ui.html",
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:4200",
+        "http://localhost:8081"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "post.logout.redirect.uris": "+",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "display.on.consent.screen": "false",
+        "backchannel.logout.revoke.offline.tokens": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "id": "frontend-roles-mapper-id",
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "id": "roles-scope-id",
+      "name": "roles",
+      "description": "OpenID Connect scope for add user roles to the access token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${rolesScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "id": "realm-roles-mapper-id",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "user.attribute": "foo",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "client-roles-mapper-id",
+          "name": "client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "foo",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        },
+        {
+          "id": "audience-resolve-mapper-id",
+          "name": "audience resolve",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-resolve-mapper",
+          "consentRequired": false,
+          "config": {}
+        }
+      ]
+    },
+    {
+      "id": "email-scope-id",
+      "name": "email",
+      "description": "OpenID Connect built-in scope: email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${emailScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "id": "email-verified-mapper-id",
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "emailVerified",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean"
+          }
+        },
+        {
+          "id": "email-claim-mapper-id",
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "id": "profile-scope-id",
+      "name": "profile",
+      "description": "OpenID Connect built-in scope: profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${profileScopeConsentText}"
+      },
+      "protocolMappers": []
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "role_list",
+    "profile",
+    "email",
+    "roles",
+    "web-origins",
+    "acr"
+  ],
+  "defaultOptionalClientScopes": [
+    "offline_access",
+    "address",
+    "phone",
+    "microprofile-jwt"
+  ],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "no-referrer",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "smtpServer": {},
+  "eventsEnabled": false,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [],
+  "adminEventsEnabled": false,
+  "adminEventsDetailsEnabled": false,
+  "identityProviders": [],
+  "identityProviderMappers": [],
+  "components": {
+    "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
+      {
+        "id": "trusted-hosts-id",
+        "name": "Trusted Hosts",
+        "providerId": "trusted-hosts",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "host-sending-registration-request-must-match": [
+            "true"
+          ],
+          "client-uris-must-match": [
+            "true"
+          ]
+        }
+      },
+      {
+        "id": "allowed-protocol-mappers-id",
+        "name": "Allowed Protocol Mapper Types",
+        "providerId": "allowed-protocol-mappers",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "allowed-protocol-mapper-types": [
+            "oidc-full-name-mapper",
+            "saml-user-property-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-address-mapper",
+            "saml-role-list-mapper",
+            "oidc-usermodel-property-mapper",
+            "saml-user-attribute-mapper",
+            "oidc-usermodel-attribute-mapper"
+          ]
+        }
+      },
+      {
+        "id": "allowed-client-templates-id",
+        "name": "Allowed Client Scopes",
+        "providerId": "allowed-client-templates",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "allow-default-scopes": [
+            "true"
+          ]
+        }
+      }
+    ],
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "id": "rsa-generated-id",
+        "name": "rsa-generated",
+        "providerId": "rsa-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ]
+        }
+      },
+      {
+        "id": "hmac-generated-id",
+        "name": "hmac-generated",
+        "providerId": "hmac-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ],
+          "algorithm": [
+            "HS256"
+          ]
+        }
+      },
+      {
+        "id": "aes-generated-id",
+        "name": "aes-generated",
+        "providerId": "aes-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ]
+        }
+      }
+    ]
+  },
+  "internationalizationEnabled": false,
+  "supportedLocales": [],
+  "authenticationFlows": [],
+  "authenticatorConfig": [],
+  "requiredActions": [],
+  "browserFlow": "browser",
+  "registrationFlow": "registration",
+  "directGrantFlow": "direct grant",
+  "resetCredentialsFlow": "reset credentials",
+  "clientAuthenticationFlow": "clients",
+  "dockerAuthenticationFlow": "docker auth",
+  "attributes": {},
+  "keycloakVersion": "24.0.0",
+  "userManagedAccessAllowed": false,
+  "users": [
+    {
+      "id": "user-admin",
+      "createdTimestamp": 1704067200000,
+      "username": "admin@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "ADMIN"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": []
+    },
+    {
+      "id": "user-gestionnaire-approvisionnement",
+      "createdTimestamp": 1704067200000,
+      "username": "gestionnaire@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Gestionnaire",
+      "lastName": "Approvisionnement",
+      "email": "gestionnaire@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "GESTIONNAIRE_APPROVISIONNEMENT"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Approvisionnement"]
+    },
+    {
+      "id": "user-commercial",
+      "createdTimestamp": 1704067200000,
+      "username": "commercial@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Gestionnaire",
+      "lastName": "Commercial",
+      "email": "commercial@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "GESTIONNAIRE_COMMERCIAL"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Commercial"]
+    },
+    {
+      "id": "user-chef-production",
+      "createdTimestamp": 1704067200000,
+      "username": "production@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Chef",
+      "lastName": "Production",
+      "email": "production@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "CHEF_PRODUCTION"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Production"]
+    },
+    {
+      "id": "user-responsable-logistique",
+      "createdTimestamp": 1704067200000,
+      "username": "logistique@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Responsable",
+      "lastName": "Logistique",
+      "email": "logistique@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "RESPONSABLE_LOGISTIQUE"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Logistique"]
+    },
+    {
+      "id": "user-responsable-achats",
+      "createdTimestamp": 1704067200000,
+      "username": "achats@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Responsable",
+      "lastName": "Achats",
+      "email": "achats@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "RESPONSABLE_ACHATS"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Approvisionnement"]
+    },
+    {
+      "id": "user-planificateur",
+      "createdTimestamp": 1704067200000,
+      "username": "planificateur@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Planificateur",
+      "lastName": "Production",
+      "email": "planificateur@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "PLANIFICATEUR"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Production"]
+    },
+    {
+      "id": "user-superviseur-logistique",
+      "createdTimestamp": 1704067200000,
+      "username": "superviseur_logistique@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Superviseur",
+      "lastName": "Logistique",
+      "email": "superviseur_logistique@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "SUPERVISEUR_LOGISTIQUE"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Logistique"]
+    },
+    {
+      "id": "user-superviseur-production",
+      "createdTimestamp": 1704067200000,
+      "username": "superviseur_production@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Superviseur",
+      "lastName": "Production",
+      "email": "superviseur_production@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "SUPERVISEUR_PRODUCTION"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Production"]
+    },
+    {
+      "id": "user-superviseur-livraisons",
+      "createdTimestamp": 1704067200000,
+      "username": "superviseur_livraisons@example.com",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Superviseur",
+      "lastName": "Livraisons",
+      "email": "superviseur_livraisons@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "SUPERVISEUR_LIVRAISONS"
+      ],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": ["/Logistique"]
+    }
+  ]
+}
