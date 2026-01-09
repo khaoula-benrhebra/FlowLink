@@ -18,7 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -34,6 +36,7 @@ public class ProductController {
             @ApiResponse(responseCode = "201", description = "Produit créé avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductDTO>> createProduct(
             @Valid @RequestBody ProductDTO productDTO,
             HttpServletRequest request) {
@@ -54,6 +57,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Produit mis à jour avec succès"),
             @ApiResponse(responseCode = "404", description = "Produit non trouvé")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductDTO>> updateProduct(
             @Parameter(description = "ID du produit") @PathVariable Long id,
             @Valid @RequestBody ProductDTO productDTO,
@@ -77,6 +81,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Produit non trouvé"),
             @ApiResponse(responseCode = "409", description = "Produit associé à des ordres de production")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Void>> deleteProduct(
             @Parameter(description = "ID du produit") @PathVariable Long id,
             HttpServletRequest request) {
@@ -97,6 +102,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Produit récupéré avec succès"),
             @ApiResponse(responseCode = "404", description = "Produit non trouvé")
     })
+    @PreAuthorize("hasAnyRole('CHEF_PRODUCTION', 'SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductDTO>> getProductById(
             @Parameter(description = "ID du produit") @PathVariable Long id,
             HttpServletRequest request) {
@@ -117,6 +123,7 @@ public class ProductController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
+    @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Page<ProductDTO>>> getAllProducts(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
@@ -146,6 +153,7 @@ public class ProductController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Recherche effectuée avec succès")
     })
+    @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Page<ProductDTO>>> searchProductsByName(
             @Parameter(description = "Nom du produit à rechercher") @RequestParam String name,
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,

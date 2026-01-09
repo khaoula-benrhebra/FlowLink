@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.UserDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
@@ -24,10 +25,12 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    @Operation(summary = "Créer un nouvel utilisateur", description = "Ajoute un nouvel utilisateur au système")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Créer un nouvel utilisateur", description = "Ajoute un nouvel utilisateur au système (Réservé aux ADMIN)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Utilisateur créé avec succès"),
-            @ApiResponse(responseCode = "400", description = "Données invalides")
+            @ApiResponse(responseCode = "400", description = "Données invalides"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - Rôle ADMIN requis")
     })
     public ResponseEntity<SuccessResponse<UserDTO>> createUser(
             @Parameter(description = "Données de l'utilisateur à créer", required = true)
@@ -47,10 +50,12 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Modifier un utilisateur", description = "Met à jour les informations d'un utilisateur existant")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Modifier un utilisateur", description = "Met à jour les informations d'un utilisateur existant (Réservé aux ADMIN)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur modifié avec succès"),
-            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - Rôle ADMIN requis")
     })
     public ResponseEntity<SuccessResponse<UserDTO>> updateUser(
             @Parameter(description = "ID de l'utilisateur", required = true)

@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.supplychain.supplychain.dto.Production.ProductDTO;
 import org.supplychain.supplychain.model.Product;
 import org.supplychain.supplychain.repository.Production.ProductRepository;
-import org.supplychain.supplychain.util.TestJwtUtil;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,16 +32,11 @@ class ProductControllerIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
-    @Autowired
-    private TestJwtUtil testJwtUtil;
-
     private Product product;
-    private String adminToken;
 
     @BeforeEach
     void setUp() {
         productRepository.deleteAll();
-        adminToken = testJwtUtil.generateAdminToken();
 
         product = new Product();
         product.setName("Existing Product");
@@ -54,13 +49,12 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
-    void getAllProducts_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllProducts_Success() throws Exception {
         productRepository.save(product);
         productRepository.save(product);
 
-        mockMvc.perform(get("/api/products")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+        mockMvc.perform(get("/api/products").param("page", "0")
                 .param("size", "10")
                 .param("sortBy", "name")
                 .param("sortDirection", "asc"))
@@ -72,10 +66,9 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
-    void getAllProducts_EmptyList() throws Exception {
-        mockMvc.perform(get("/api/products")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllProducts_EmptyList() throws Exception {
+        mockMvc.perform(get("/api/products").param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
@@ -84,54 +77,53 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
-    void getProductById_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getProductById_Success() throws Exception {
         Product savedProduct = productRepository.save(product);
         Long productId = savedProduct.getIdProduct();
 
-        mockMvc.perform(get("/api/products/{id}", productId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(get("/api/products/{id}", productId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.name").value("Existing Product"));
     }
 
     @Test
-    void getProductById_NotFound() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getProductById_NotFound() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(get("/api/products/{id}", nonExistentId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(get("/api/products/{id}", nonExistentId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void deleteProduct_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void deleteProduct_Success() throws Exception {
         Product savedProduct = productRepository.save(product);
         Long productId = savedProduct.getIdProduct();
 
-        mockMvc.perform(delete("/api/products/{id}", productId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(delete("/api/products/{id}", productId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Produit supprimé avec succès"));
     }
 
     @Test
-    void deleteProduct_NotFound() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void deleteProduct_NotFound() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(delete("/api/products/{id}", nonExistentId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(delete("/api/products/{id}", nonExistentId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void searchProductsByName_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void searchProductsByName_Success() throws Exception {
         productRepository.save(product);
 
-        mockMvc.perform(get("/api/products/search")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("name", "Existing")
+        mockMvc.perform(get("/api/products/search").param("name", "Existing")
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -139,12 +131,11 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
-    void searchProductsByName_NoResults() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void searchProductsByName_NoResults() throws Exception {
         productRepository.save(product);
 
-        mockMvc.perform(get("/api/products/search")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("name", "NonExistent")
+        mockMvc.perform(get("/api/products/search").param("name", "NonExistent")
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -153,7 +144,8 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
-    void getAllProducts_WithPagination() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllProducts_WithPagination() throws Exception {
         for (int i = 0; i < 15; i++) {
             Product p = new Product();
             p.setName("Product " + i);
@@ -166,9 +158,7 @@ class ProductControllerIntegrationTest {
             productRepository.save(p);
         }
 
-        mockMvc.perform(get("/api/products")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+        mockMvc.perform(get("/api/products").param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(10)))

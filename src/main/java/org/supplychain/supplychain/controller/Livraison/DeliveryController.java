@@ -14,15 +14,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Livraison.DeliveryDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.Livraison.DeliveryService;
 
+
 @RestController
 @RequestMapping("/api/deliveries")
 @RequiredArgsConstructor
 @Tag(name = "Livraisons", description = "API de gestion des livraisons")
+@PreAuthorize("hasRole('RESPONSABLE_LOGISTIQUE')")
 public class DeliveryController {
 
     private final DeliveryService deliveryService;

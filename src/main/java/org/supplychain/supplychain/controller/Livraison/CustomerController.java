@@ -14,15 +14,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Livraison.CustomerDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.Livraison.CustomerService;
 
+
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
 @Tag(name = "Clients", description = "API de gestion des clients")
+@PreAuthorize("hasRole('GESTIONNAIRE_COMMERCIAL')")
 public class CustomerController {
 
     private final CustomerService customerService;

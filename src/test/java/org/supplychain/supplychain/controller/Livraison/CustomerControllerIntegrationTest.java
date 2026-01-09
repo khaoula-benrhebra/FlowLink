@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.supplychain.supplychain.dto.Livraison.CustomerDTO;
 import org.supplychain.supplychain.model.Customer;
 import org.supplychain.supplychain.repository.Livraison.CustomerRepository;
-import org.supplychain.supplychain.util.TestJwtUtil;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,17 +32,12 @@ class CustomerControllerIntegrationTest {
     @Autowired
     private CustomerRepository customerRepository;
 
-    @Autowired
-    private TestJwtUtil testJwtUtil;
-
     private CustomerDTO customerDTO;
     private Customer customer;
-    private String adminToken;
 
     @BeforeEach
     void setUp() {
         customerRepository.deleteAll();
-        adminToken = testJwtUtil.generateAdminToken();
 
         customerDTO = new CustomerDTO();
         customerDTO.setName("Test Customer");
@@ -58,10 +53,9 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void createCustomer_Success() throws Exception {
-        mockMvc.perform(post("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void createCustomer_Success() throws Exception {
+        mockMvc.perform(post("/api/customers").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(customerDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value(201))
@@ -73,7 +67,8 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void createCustomer_WithoutToken_ShouldReturn401() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void createCustomer_WithoutToken_ShouldReturn401() throws Exception {
         mockMvc.perform(post("/api/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(customerDTO)))
@@ -81,12 +76,11 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void createCustomer_InvalidData() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void createCustomer_InvalidData() throws Exception {
         customerDTO.setName("");
 
-        mockMvc.perform(post("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/customers").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(customerDTO)))
                 .andExpect(status().isBadRequest());
 
@@ -94,7 +88,8 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void updateCustomer_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void updateCustomer_Success() throws Exception {
         Customer savedCustomer = customerRepository.save(customer);
         Long customerId = savedCustomer.getIdCustomer();
 
@@ -104,9 +99,7 @@ class CustomerControllerIntegrationTest {
         updateDTO.setPhone("33612345999");
         updateDTO.setAddress("789 Updated Street");
 
-        mockMvc.perform(put("/api/customers/{id}", customerId)
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/customers/{id}", customerId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
@@ -120,7 +113,8 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void updateCustomer_NotFound() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void updateCustomer_NotFound() throws Exception {
         Long nonExistentId = 999L;
 
         CustomerDTO updateDTO = new CustomerDTO();
@@ -129,20 +123,18 @@ class CustomerControllerIntegrationTest {
         updateDTO.setPhone("33612345999");
         updateDTO.setAddress("789 Updated Street");
 
-        mockMvc.perform(put("/api/customers/{id}", nonExistentId)
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/customers/{id}", nonExistentId).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void deleteCustomer_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void deleteCustomer_Success() throws Exception {
         Customer savedCustomer = customerRepository.save(customer);
         Long customerId = savedCustomer.getIdCustomer();
 
-        mockMvc.perform(delete("/api/customers/{id}", customerId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(delete("/api/customers/{id}", customerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Client supprimé avec succès"));
@@ -151,21 +143,21 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void deleteCustomer_NotFound() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void deleteCustomer_NotFound() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(delete("/api/customers/{id}", nonExistentId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(delete("/api/customers/{id}", nonExistentId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getCustomerById_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getCustomerById_Success() throws Exception {
         Customer savedCustomer = customerRepository.save(customer);
         Long customerId = savedCustomer.getIdCustomer();
 
-        mockMvc.perform(get("/api/customers/{id}", customerId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(get("/api/customers/{id}", customerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.name").value("Existing Customer"))
@@ -173,22 +165,21 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void getCustomerById_NotFound() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getCustomerById_NotFound() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(get("/api/customers/{id}", nonExistentId)
-                .header("Authorization", "Bearer " + adminToken))
+        mockMvc.perform(get("/api/customers/{id}", nonExistentId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getAllCustomers_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllCustomers_Success() throws Exception {
         customerRepository.save(customer);
         customerRepository.save(customer);
 
-        mockMvc.perform(get("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+        mockMvc.perform(get("/api/customers").param("page", "0")
                 .param("size", "10")
                 .param("sortBy", "name")
                 .param("direction", "asc"))
@@ -199,10 +190,9 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void getAllCustomers_EmptyList() throws Exception {
-        mockMvc.perform(get("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllCustomers_EmptyList() throws Exception {
+        mockMvc.perform(get("/api/customers").param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
@@ -211,13 +201,12 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void searchCustomersByName_Success() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void searchCustomersByName_Success() throws Exception {
         customerRepository.save(customer);
         customerRepository.save(customer);
 
-        mockMvc.perform(get("/api/customers/search")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("name", "Existing")
+        mockMvc.perform(get("/api/customers/search").param("name", "Existing")
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -226,12 +215,11 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void searchCustomersByName_NoResults() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void searchCustomersByName_NoResults() throws Exception {
         customerRepository.save(customer);
 
-        mockMvc.perform(get("/api/customers/search")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("name", "NonExistent")
+        mockMvc.perform(get("/api/customers/search").param("name", "NonExistent")
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -240,7 +228,8 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void getAllCustomers_WithPagination() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void getAllCustomers_WithPagination() throws Exception {
         for (int i = 0; i < 15; i++) {
             Customer c = new Customer();
             c.setName("Customer " + i);
@@ -250,9 +239,7 @@ class CustomerControllerIntegrationTest {
             customerRepository.save(c);
         }
 
-        mockMvc.perform(get("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "0")
+        mockMvc.perform(get("/api/customers").param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(10)))
@@ -260,9 +247,7 @@ class CustomerControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.totalPages").value(2))
                 .andExpect(jsonPath("$.data.number").value(0));
 
-        mockMvc.perform(get("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .param("page", "1")
+        mockMvc.perform(get("/api/customers").param("page", "1")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(5)))
@@ -270,7 +255,8 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
-    void createCustomer_DuplicateEmail() throws Exception {
+
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})    void createCustomer_DuplicateEmail() throws Exception {
         customerRepository.save(customer);
 
         CustomerDTO duplicateDTO = new CustomerDTO();
@@ -279,9 +265,7 @@ class CustomerControllerIntegrationTest {
         duplicateDTO.setPhone("33611111111");
         duplicateDTO.setAddress("Another Street");
 
-        mockMvc.perform(post("/api/customers")
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/customers").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(duplicateDTO)))
                 .andExpect(status().isConflict());
     }

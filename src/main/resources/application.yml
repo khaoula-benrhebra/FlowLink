@@ -3,14 +3,14 @@ spring:
     name: FlowLink
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/FlowLink_db
+    url: jdbc:postgresql://localhost:5432/FlowLink_db
     username: FlowLink_user
     password: FlowLink_pass
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -25,14 +25,23 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
+  # Configuration OAuth2 Resource Server pour Keycloak
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/flowlink-realm
+          jwk-set-uri: http://localhost:8080/realms/flowlink-realm/protocol/openid-connect/certs
+
 server:
-  port: 8080
+  port: 8081
 
 logging:
   level:
     root: INFO
     org.supplychain: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
     org.springframework.web: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

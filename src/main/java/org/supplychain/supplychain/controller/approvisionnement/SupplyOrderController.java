@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderDTO;
 import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderLineDTO;
@@ -22,6 +23,7 @@ import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.approvisionnement.SupplyOrderService;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/supply-orders")
@@ -38,6 +40,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
     @PostMapping
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<SupplyOrderDTO>> createSupplyOrder(
             @Parameter(description = "Données de la commande d'approvisionnement", required = true)
             @Valid @RequestBody SupplyOrderDTO supplyOrderDTO,
@@ -61,6 +64,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<SupplyOrderDTO>> updateSupplyOrder(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long id,
@@ -87,6 +91,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(
             @Parameter(description = "ID de la commande à supprimer", required = true)
             @PathVariable Long id,
@@ -110,6 +115,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
     @GetMapping
+    @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getAllSupplyOrders(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
@@ -137,6 +143,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "200", description = "Commandes filtrées avec succès")
     })
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getSupplyOrdersByStatus(
             @Parameter(description = "Statut de la commande", required = true)
             @PathVariable SupplyOrderStatus status,
@@ -167,6 +174,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<SupplyOrderDTO>> getSupplyOrderById(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long id,
@@ -191,6 +199,7 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @GetMapping("/{orderId}/lines")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<List<SupplyOrderLineDTO>>> getOrderLines(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long orderId,

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Livraison.OrderDTO;
 import org.supplychain.supplychain.dto.Livraison.ProductOrderDTO;
@@ -37,6 +38,7 @@ public class OrderController {
             @ApiResponse(responseCode = "201", description = "Commande créée avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
+    @PreAuthorize("hasRole('GESTIONNAIRE_COMMERCIAL')")
     public ResponseEntity<SuccessResponse<OrderDTO>> createOrder(
             @Valid @RequestBody OrderDTO orderDTO,
             HttpServletRequest request) {
@@ -59,6 +61,7 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTIONNAIRE_COMMERCIAL')")
     public ResponseEntity<SuccessResponse<OrderDTO>> updateOrder(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long id,
@@ -84,6 +87,7 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTIONNAIRE_COMMERCIAL')")
     public ResponseEntity<SuccessResponse<Void>> cancelOrder(
             @Parameter(description = "ID de la commande à annuler", required = true)
             @PathVariable Long id,
@@ -106,6 +110,7 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
     @GetMapping
+    @PreAuthorize("hasRole('SUPERVISEUR_LIVRAISONS')")
     public ResponseEntity<SuccessResponse<Page<OrderDTO>>> getAllOrders(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
@@ -133,6 +138,7 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Commandes filtrées avec succès")
     })
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('SUPERVISEUR_LIVRAISONS')")
     public ResponseEntity<SuccessResponse<Page<OrderDTO>>> getOrdersByStatus(
             @Parameter(description = "Statut de la commande", required = true)
             @PathVariable OrderStatus status,
@@ -163,6 +169,7 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Commande trouvée"),
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_COMMERCIAL', 'SUPERVISEUR_LIVRAISONS')")
     public ResponseEntity<SuccessResponse<OrderDTO>> getOrderById(
             @Parameter(description = "ID de la commande") @PathVariable Long id,
             HttpServletRequest request) {
@@ -185,6 +192,7 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @GetMapping("/{orderId}/products")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_COMMERCIAL', 'SUPERVISEUR_LIVRAISONS')")
     public ResponseEntity<SuccessResponse<List<ProductOrderDTO>>> getOrderProducts(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long orderId,

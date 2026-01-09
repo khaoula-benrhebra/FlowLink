@@ -2,7 +2,7 @@ target/
 .m2/
 .git/
 .gitignore
-.idea/
+backend/.idea/
 .settings/
 *.iml
 *.md

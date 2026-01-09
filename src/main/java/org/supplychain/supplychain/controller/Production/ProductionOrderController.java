@@ -14,11 +14,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.supplychain.supplychain.dto.Production.ProductionOrderDTO;
 import org.supplychain.supplychain.enums.ProductionOrderStatus;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.Production.ProductionOrderService;
+
 
 @RestController
 @RequestMapping("/api/production-orders")
@@ -36,6 +38,7 @@ public class ProductionOrderController {
             @ApiResponse(responseCode = "400", description = "Données invalides"),
             @ApiResponse(responseCode = "404", description = "Produit non trouvé")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductionOrderDTO>> createProductionOrder(
             @Valid @RequestBody ProductionOrderDTO dto,
             HttpServletRequest request) {
@@ -57,6 +60,7 @@ public class ProductionOrderController {
             @ApiResponse(responseCode = "200", description = "Ordre de production mis à jour avec succès"),
             @ApiResponse(responseCode = "404", description = "Ordre de production non trouvé")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductionOrderDTO>> updateProductionOrder(
             @Parameter(description = "ID de l'ordre de production") @PathVariable Long id,
             @Valid @RequestBody ProductionOrderDTO dto,
@@ -80,6 +84,7 @@ public class ProductionOrderController {
             @ApiResponse(responseCode = "404", description = "Ordre de production non trouvé"),
             @ApiResponse(responseCode = "409", description = "L'ordre ne peut pas être annulé (statut différent de EN_ATTENTE)")
     })
+    @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Void>> cancelProductionOrder(
             @Parameter(description = "ID de l'ordre de production") @PathVariable Long id,
             HttpServletRequest request) {
@@ -101,6 +106,7 @@ public class ProductionOrderController {
             @ApiResponse(responseCode = "200", description = "Ordre de production récupéré avec succès"),
             @ApiResponse(responseCode = "404", description = "Ordre de production non trouvé")
     })
+    @PreAuthorize("hasAnyRole('CHEF_PRODUCTION', 'SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<ProductionOrderDTO>> getProductionOrderById(
             @Parameter(description = "ID de l'ordre de production") @PathVariable Long id,
             HttpServletRequest request) {
@@ -121,6 +127,7 @@ public class ProductionOrderController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
+    @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Page<ProductionOrderDTO>>> getAllProductionOrders(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
@@ -151,6 +158,7 @@ public class ProductionOrderController {
             @ApiResponse(responseCode = "200", description = "Ordres récupérés avec succès"),
             @ApiResponse(responseCode = "400", description = "Statut invalide")
     })
+    @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     public ResponseEntity<SuccessResponse<Page<ProductionOrderDTO>>> getProductionOrdersByStatus(
             @Parameter(description = "Statut de l'ordre (EN_ATTENTE, EN_PRODUCTION, TERMINE, BLOQUE)")
             @PathVariable ProductionOrderStatus status,
