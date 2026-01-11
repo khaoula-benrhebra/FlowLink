@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderDTO;
 import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderLineDTO;
 import org.supplychain.supplychain.enums.SupplyOrderStatus;
@@ -37,8 +38,9 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "201", description = "Commande créée avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    @PostMapping
-    public ResponseEntity<SuccessResponse<SupplyOrderDTO>> createSupplyOrder(
+        @PostMapping
+        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+        public ResponseEntity<SuccessResponse<SupplyOrderDTO>> createSupplyOrder(
             @Parameter(description = "Données de la commande d'approvisionnement", required = true)
             @Valid @RequestBody SupplyOrderDTO supplyOrderDTO,
             HttpServletRequest request) {
@@ -60,8 +62,9 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "200", description = "Commande modifiée avec succès"),
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
-    @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse<SupplyOrderDTO>> updateSupplyOrder(
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+        public ResponseEntity<SuccessResponse<SupplyOrderDTO>> updateSupplyOrder(
             @Parameter(description = "ID de la commande", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nouvelles données de la commande", required = true)
@@ -86,8 +89,9 @@ public class SupplyOrderController {
             @ApiResponse(responseCode = "200", description = "Commande supprimée avec succès"),
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+        public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(
             @Parameter(description = "ID de la commande à supprimer", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
@@ -109,8 +113,9 @@ public class SupplyOrderController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    @GetMapping
-    public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getAllSupplyOrders(
+        @GetMapping
+        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
+        public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getAllSupplyOrders(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "orderDate") String sortBy,
@@ -136,8 +141,9 @@ public class SupplyOrderController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Commandes filtrées avec succès")
     })
-    @GetMapping("/status/{status}")
-    public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getSupplyOrdersByStatus(
+        @GetMapping("/status/{status}")
+        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
+        public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getSupplyOrdersByStatus(
             @Parameter(description = "Statut de la commande", required = true)
             @PathVariable SupplyOrderStatus status,
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,

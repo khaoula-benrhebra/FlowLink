@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.supplychain.supplychain.dto.Approvisionnement.SupplierDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.approvisionnement.SupplierService;
@@ -33,8 +34,9 @@ public class SupplierController {
             @ApiResponse(responseCode = "201", description = "Fournisseur créé avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    @PostMapping
-    public ResponseEntity<SuccessResponse<SupplierDTO>> createSupplier(
+        @PostMapping
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<SupplierDTO>> createSupplier(
             @Parameter(description = "Données du fournisseur à créer", required = true)
             @Valid @RequestBody SupplierDTO supplierDTO,
             HttpServletRequest request) {
@@ -57,8 +59,9 @@ public class SupplierController {
             @ApiResponse(responseCode = "200", description = "Fournisseur modifié avec succès"),
             @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
     })
-    @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse<SupplierDTO>> updateSupplier(
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<SupplierDTO>> updateSupplier(
             @Parameter(description = "ID du fournisseur", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nouvelles données du fournisseur", required = true)
@@ -83,8 +86,9 @@ public class SupplierController {
             @ApiResponse(responseCode = "200", description = "Fournisseur supprimé avec succès"),
             @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SuccessResponse<Void>> deleteSupplier(
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<Void>> deleteSupplier(
             @Parameter(description = "ID du fournisseur à supprimer", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
@@ -106,8 +110,9 @@ public class SupplierController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    @GetMapping
-    public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> getAllSuppliers(
+        @GetMapping
+        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
+        public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> getAllSuppliers(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
@@ -134,8 +139,9 @@ public class SupplierController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Recherche effectuée avec succès")
     })
-    @GetMapping("/search")
-    public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> searchSuppliersByName(
+        @GetMapping("/search")
+        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+        public ResponseEntity<SuccessResponse<Page<SupplierDTO>>> searchSuppliersByName(
             @Parameter(description = "Nom du fournisseur à rechercher", required = true)
             @RequestParam String name,
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,

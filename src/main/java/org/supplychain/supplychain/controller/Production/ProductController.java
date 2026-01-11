@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/products")
@@ -28,13 +29,14 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping
+        @PostMapping
+        @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     @Operation(summary = "Ajouter un produit fini", description = "Crée un nouveau produit dans le système")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Produit créé avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    public ResponseEntity<SuccessResponse<ProductDTO>> createProduct(
+        public ResponseEntity<SuccessResponse<ProductDTO>> createProduct(
             @Valid @RequestBody ProductDTO productDTO,
             HttpServletRequest request) {
 
@@ -48,13 +50,14 @@ public class ProductController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     @Operation(summary = "Modifier les informations d'un produit", description = "Met à jour un produit existant")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Produit mis à jour avec succès"),
             @ApiResponse(responseCode = "404", description = "Produit non trouvé")
     })
-    public ResponseEntity<SuccessResponse<ProductDTO>> updateProduct(
+        public ResponseEntity<SuccessResponse<ProductDTO>> updateProduct(
             @Parameter(description = "ID du produit") @PathVariable Long id,
             @Valid @RequestBody ProductDTO productDTO,
             HttpServletRequest request) {
@@ -69,7 +72,8 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('CHEF_PRODUCTION')")
     @Operation(summary = "Supprimer un produit",
             description = "Supprime un produit s'il n'existe aucun ordre de production associé")
     @ApiResponses(value = {
@@ -77,7 +81,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Produit non trouvé"),
             @ApiResponse(responseCode = "409", description = "Produit associé à des ordres de production")
     })
-    public ResponseEntity<SuccessResponse<Void>> deleteProduct(
+        public ResponseEntity<SuccessResponse<Void>> deleteProduct(
             @Parameter(description = "ID du produit") @PathVariable Long id,
             HttpServletRequest request) {
 
@@ -111,13 +115,14 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
+        @GetMapping
+        @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     @Operation(summary = "Consulter la liste complète des produits",
             description = "Récupère tous les produits avec pagination")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    public ResponseEntity<SuccessResponse<Page<ProductDTO>>> getAllProducts(
+        public ResponseEntity<SuccessResponse<Page<ProductDTO>>> getAllProducts(
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
@@ -140,13 +145,14 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search")
+        @GetMapping("/search")
+        @PreAuthorize("hasRole('SUPERVISEUR_PRODUCTION')")
     @Operation(summary = "Rechercher un produit par nom",
             description = "Recherche des produits par nom avec pagination")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Recherche effectuée avec succès")
     })
-    public ResponseEntity<SuccessResponse<Page<ProductDTO>>> searchProductsByName(
+        public ResponseEntity<SuccessResponse<Page<ProductDTO>>> searchProductsByName(
             @Parameter(description = "Nom du produit à rechercher") @RequestParam String name,
             @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,

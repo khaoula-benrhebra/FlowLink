@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.supplychain.supplychain.dto.Approvisionnement.RawMaterialDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.approvisionnement.RawMaterialService;
@@ -36,8 +37,9 @@ public class RawMaterialController {
             @ApiResponse(responseCode = "201", description = "Matière première créée avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    @PostMapping
-    public ResponseEntity<SuccessResponse<RawMaterialDTO>> createRawMaterial(
+        @PostMapping
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<RawMaterialDTO>> createRawMaterial(
             @Parameter(description = "Données de la matière première à créer", required = true)
             @Valid @RequestBody RawMaterialDTO rawMaterialDTO,
             HttpServletRequest request) {
@@ -60,8 +62,9 @@ public class RawMaterialController {
             @ApiResponse(responseCode = "404", description = "Matière première non trouvée"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse<RawMaterialDTO>> updateRawMaterial(
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<RawMaterialDTO>> updateRawMaterial(
             @Parameter(description = "ID de la matière première", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nouvelles données de la matière première", required = true)
@@ -86,8 +89,9 @@ public class RawMaterialController {
             @ApiResponse(responseCode = "404", description = "Matière première non trouvée"),
             @ApiResponse(responseCode = "409", description = "Matière première utilisée, suppression impossible")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<SuccessResponse<Void>> deleteRawMaterial(
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('GESTIONNAIRE_APPROVISIONNEMENT')")
+        public ResponseEntity<SuccessResponse<Void>> deleteRawMaterial(
             @Parameter(description = "ID de la matière première à supprimer", required = true)
             @PathVariable Long id,
             HttpServletRequest request) {
@@ -108,8 +112,9 @@ public class RawMaterialController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    @GetMapping
-    public ResponseEntity<SuccessResponse<Page<RawMaterialDTO>>> getAllRawMaterials(
+        @GetMapping
+        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
+        public ResponseEntity<SuccessResponse<Page<RawMaterialDTO>>> getAllRawMaterials(
             @Parameter(description = "Numéro de page (commence à 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "name") String sortBy,
@@ -135,8 +140,9 @@ public class RawMaterialController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste des matières en rupture récupérée avec succès")
     })
-    @GetMapping("/below-min-stock")
-    public ResponseEntity<SuccessResponse<List<RawMaterialDTO>>> getMaterialsBelowMinStock(
+        @GetMapping("/below-min-stock")
+        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
+        public ResponseEntity<SuccessResponse<List<RawMaterialDTO>>> getMaterialsBelowMinStock(
             HttpServletRequest request) {
 
         List<RawMaterialDTO> materials = rawMaterialService.getMaterialsBelowMinStock();

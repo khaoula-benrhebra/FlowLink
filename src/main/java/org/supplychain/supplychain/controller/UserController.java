@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.supplychain.supplychain.dto.UserDTO;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.user.UserService;
@@ -23,13 +24,14 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping
+        @PostMapping
+        @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Créer un nouvel utilisateur", description = "Ajoute un nouvel utilisateur au système")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Utilisateur créé avec succès"),
             @ApiResponse(responseCode = "400", description = "Données invalides")
     })
-    public ResponseEntity<SuccessResponse<UserDTO>> createUser(
+        public ResponseEntity<SuccessResponse<UserDTO>> createUser(
             @Parameter(description = "Données de l'utilisateur à créer", required = true)
             @Valid @RequestBody UserDTO userDTO,
             HttpServletRequest request) {
@@ -46,13 +48,14 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/{id}")
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Modifier un utilisateur", description = "Met à jour les informations d'un utilisateur existant")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur modifié avec succès"),
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<SuccessResponse<UserDTO>> updateUser(
+        public ResponseEntity<SuccessResponse<UserDTO>> updateUser(
             @Parameter(description = "ID de l'utilisateur", required = true)
             @PathVariable Long id,
             @Parameter(description = "Nouvelles données de l'utilisateur", required = true)
@@ -71,7 +74,8 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search")
+        @GetMapping("/search")
+        @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Rechercher un utilisateur par email", description = "Trouve un utilisateur par son adresse email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé"),
