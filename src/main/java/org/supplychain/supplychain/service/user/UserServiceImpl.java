@@ -1,10 +1,14 @@
 package org.supplychain.supplychain.service.user;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supplychain.supplychain.dto.UserDTO;
+import org.supplychain.supplychain.dto.UserResponse;
 import org.supplychain.supplychain.exception.DuplicateResourceException;
 import org.supplychain.supplychain.exception.ResourceNotFoundException;
 import org.supplychain.supplychain.mapper.UserMapper;
@@ -60,5 +64,12 @@ public class UserServiceImpl implements UserService {
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
         return userMapper.toDTO(user);
+    }
+
+    @Override
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 }
