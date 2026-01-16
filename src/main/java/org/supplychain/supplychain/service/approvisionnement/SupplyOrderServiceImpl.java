@@ -1,179 +1,119 @@
 package org.supplychain.supplychain.service.approvisionnement;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderDTO;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderLineDTO;
+import org.supplychain.supplychain.dto.Approvisionnement.*;
 import org.supplychain.supplychain.enums.SupplyOrderStatus;
-import org.supplychain.supplychain.exception.DuplicateResourceException;
-import org.supplychain.supplychain.exception.ResourceInUseException;
-import org.supplychain.supplychain.exception.ResourceNotFoundException;
-import org.supplychain.supplychain.mapper.Approvisionnement.SupplyOrderLineMapper;
+import org.supplychain.supplychain.exception.*;
 import org.supplychain.supplychain.mapper.Approvisionnement.SupplyOrderMapper;
-import org.supplychain.supplychain.model.RawMaterial;
-import org.supplychain.supplychain.model.Supplier;
-import org.supplychain.supplychain.model.SupplyOrder;
-import org.supplychain.supplychain.model.SupplyOrderLine;
-import org.supplychain.supplychain.repository.approvisionnement.RawMaterialRepository;
-import org.supplychain.supplychain.repository.approvisionnement.SupplierRepository;
-import org.supplychain.supplychain.repository.approvisionnement.SupplyOrderLineRepository;
-import org.supplychain.supplychain.repository.approvisionnement.SupplyOrderRepository;
-
+import org.supplychain.supplychain.mapper.Approvisionnement.SupplyOrderLineMapper;
+import org.supplychain.supplychain.model.*;
+import org.supplychain.supplychain.repository.approvisionnement.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class SupplyOrderServiceImpl implements SupplyOrderService {
-
     private final SupplyOrderRepository supplyOrderRepository;
     private final SupplyOrderLineRepository supplyOrderLineRepository;
     private final SupplierRepository supplierRepository;
     private final RawMaterialRepository rawMaterialRepository;
     private final SupplyOrderMapper supplyOrderMapper;
     private final SupplyOrderLineMapper supplyOrderLineMapper;
-
-
     @Override
-    public SupplyOrderDTO createSupplyOrder(SupplyOrderDTO supplyOrderDTO) {
+    public OrderResponse createSupplyOrder(OrderRequest request) {
+        Supplier supplier = supplierRepository.findById(request.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.getSupplierId()));
+        SupplyOrder order = new SupplyOrder();
+        order.setSupplier(supplier);
+        order.setOrderDate(request.getOrderDate());
+        order.setStatus(SupplyOrderStatus.EN_ATTENTE);
+        order.setOrderLines(new ArrayList<>());
 
-        Supplier supplier = supplierRepository.findById(supplyOrderDTO.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplyOrderDTO.getSupplierId()));
+        SupplyOrder savedOrder = supplyOrderRepository.save(order);
 
-        SupplyOrder supplyOrder = supplyOrderMapper.toEntity(supplyOrderDTO);
-        supplyOrder.setSupplier(supplier);
-
-        List<SupplyOrderLine> orderLines = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        SupplyOrder savedOrder = supplyOrderRepository.save(supplyOrder);
-
-        for (SupplyOrderLineDTO lineDTO : supplyOrderDTO.getOrderLines()) {
-            RawMaterial rawMaterial = rawMaterialRepository.findById(lineDTO.getRawMaterialId())
-                    .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", lineDTO.getRawMaterialId()));
-
-            SupplyOrderLine orderLine = supplyOrderLineMapper.toEntity(lineDTO);
-            orderLine.setSupplyOrder(savedOrder);
-            orderLine.setRawMaterial(rawMaterial);
-
-            orderLines.add(orderLine);
-
-            BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
-            totalAmount = totalAmount.add(lineTotal);
+        List<SupplyOrderLine> lines = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderLineRequest req : request.getOrderLines()) {
+            RawMaterial mat = rawMaterialRepository.findById(req.getRawMaterialId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Material", "id", req.getRawMaterialId()));
+            SupplyOrderLine line = new SupplyOrderLine();
+            line.setSupplyOrder(savedOrder);
+            line.setRawMaterial(mat);
+            line.setQuantity(req.getQuantity());
+            line.setUnitPrice(req.getUnitPrice());
+            lines.add(line);
+            total = total.add(req.getUnitPrice().multiply(BigDecimal.valueOf(req.getQuantity())));
         }
-
-        supplyOrderLineRepository.saveAll(orderLines);
-        savedOrder.setTotalAmount(totalAmount);
-        SupplyOrder updatedOrder = supplyOrderRepository.save(savedOrder);
-
-        SupplyOrderDTO result = supplyOrderMapper.toDTO(updatedOrder);
-        result.setOrderLines(supplyOrderLineMapper.toDTOList(updatedOrder.getOrderLines()));
-        return result;
+        supplyOrderLineRepository.saveAll(lines);
+        savedOrder.setOrderLines(lines);
+        savedOrder.setTotalAmount(total);
+        return supplyOrderMapper.toResponse(supplyOrderRepository.save(savedOrder));
     }
-
     @Override
-    public SupplyOrderDTO updateSupplyOrder(Long id, SupplyOrderDTO supplyOrderDTO) {
-        SupplyOrder existingOrder = supplyOrderRepository.findById(id)
+    public OrderResponse updateSupplyOrder(Long id, OrderRequest request) {
+        SupplyOrder order = supplyOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
 
-
-        Supplier supplier = supplierRepository.findById(supplyOrderDTO.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplyOrderDTO.getSupplierId()));
-
-        existingOrder.setSupplier(supplier);
-        existingOrder.setOrderDate(supplyOrderDTO.getOrderDate());
-        existingOrder.setStatus(supplyOrderDTO.getStatus());
-
-        // Supprimer les anciennes lignes via orphanRemoval (vider la collection)
-        existingOrder.getOrderLines().clear();
-
-        List<SupplyOrderLine> newOrderLines = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (SupplyOrderLineDTO lineDTO : supplyOrderDTO.getOrderLines()) {
-            RawMaterial rawMaterial = rawMaterialRepository.findById(lineDTO.getRawMaterialId())
-                    .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", lineDTO.getRawMaterialId()));
-
-            SupplyOrderLine orderLine = supplyOrderLineMapper.toEntity(lineDTO);
-            orderLine.setSupplyOrder(existingOrder);
-            orderLine.setRawMaterial(rawMaterial);
-
-            newOrderLines.add(orderLine);
-
-            BigDecimal lineTotal = lineDTO.getUnitPrice().multiply(BigDecimal.valueOf(lineDTO.getQuantity()));
-            totalAmount = totalAmount.add(lineTotal);
+        if (order.getStatus() == SupplyOrderStatus.RECUE) {
+            throw new ResourceInUseException("Impossible de modifier une commande déjà reçue.");
         }
+        Supplier supplier = supplierRepository.findById(request.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.getSupplierId()));
+        order.setSupplier(supplier);
+        order.setOrderDate(request.getOrderDate());
 
-        // Ajouter les nouvelles lignes à la collection
-        existingOrder.getOrderLines().addAll(newOrderLines);
-        existingOrder.setTotalAmount(totalAmount);
+        supplyOrderLineRepository.deleteAll(order.getOrderLines());
+        order.getOrderLines().clear();
 
-        SupplyOrder updatedOrder = supplyOrderRepository.save(existingOrder);
-
-        SupplyOrderDTO result = supplyOrderMapper.toDTO(updatedOrder);
-        result.setOrderLines(supplyOrderLineMapper.toDTOList(updatedOrder.getOrderLines()));
-        return result;
+        BigDecimal total = BigDecimal.ZERO;
+        List<SupplyOrderLine> newLines = new ArrayList<>();
+        for (OrderLineRequest req : request.getOrderLines()) {
+            RawMaterial mat = rawMaterialRepository.findById(req.getRawMaterialId()).orElseThrow();
+            SupplyOrderLine line = new SupplyOrderLine();
+            line.setSupplyOrder(order);
+            line.setRawMaterial(mat);
+            line.setQuantity(req.getQuantity());
+            line.setUnitPrice(req.getUnitPrice());
+            newLines.add(line);
+            total = total.add(req.getUnitPrice().multiply(BigDecimal.valueOf(req.getQuantity())));
+        }
+        order.getOrderLines().addAll(newLines);
+        order.setTotalAmount(total);
+        return supplyOrderMapper.toResponse(supplyOrderRepository.save(order));
     }
-
-
     @Override
     public void deleteSupplyOrder(Long id) {
-        SupplyOrder supplyOrder = supplyOrderRepository.findById(id)
+        SupplyOrder order = supplyOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
-
-        if (supplyOrder.getStatus() == SupplyOrderStatus.RECUE) {
-            throw new ResourceInUseException("Cannot delete a delivered supply order with ID: " + id);
+        if (order.getStatus() == SupplyOrderStatus.RECUE) {
+            throw new ResourceInUseException("Impossible de supprimer une commande reçue.");
         }
-
-        supplyOrderRepository.deleteById(id);
+        supplyOrderRepository.delete(order);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SupplyOrderDTO> getAllSupplyOrders(Pageable pageable) {
-        Page<SupplyOrder> supplyOrders = supplyOrderRepository.findAll(pageable);
-        return supplyOrders.map(order -> {
-            SupplyOrderDTO dto = supplyOrderMapper.toDTO(order);
-            dto.setOrderLines(supplyOrderLineMapper.toDTOList(order.getOrderLines()));
-            return dto;
-        });
+    @Override @Transactional(readOnly = true)
+    public Page<OrderResponse> getAllSupplyOrders(Pageable pageable) {
+        return supplyOrderRepository.findAll(pageable).map(supplyOrderMapper::toResponse);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SupplyOrderDTO> getSupplyOrdersByStatus(SupplyOrderStatus status, Pageable pageable) {
-        Page<SupplyOrder> supplyOrders = supplyOrderRepository.findByStatus(status, pageable);
-        return supplyOrders.map(order -> {
-            SupplyOrderDTO dto = supplyOrderMapper.toDTO(order);
-            dto.setOrderLines(supplyOrderLineMapper.toDTOList(order.getOrderLines()));
-            return dto;
-        });
+    @Override @Transactional(readOnly = true)
+    public Page<OrderResponse> getSupplyOrdersByStatus(SupplyOrderStatus status, Pageable pageable) {
+        return supplyOrderRepository.findByStatus(status, pageable).map(supplyOrderMapper::toResponse);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SupplyOrderDTO getSupplyOrderById(Long id) {
-        SupplyOrder supplyOrder = supplyOrderRepository.findById(id)
+    @Override @Transactional(readOnly = true)
+    public OrderResponse getSupplyOrderById(Long id) {
+        return supplyOrderRepository.findById(id)
+                .map(supplyOrderMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
-        SupplyOrderDTO dto = supplyOrderMapper.toDTO(supplyOrder);
-        dto.setOrderLines(supplyOrderLineMapper.toDTOList(supplyOrder.getOrderLines()));
-        return dto;
     }
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<SupplyOrderLineDTO> getOrderLines(Long orderId) {
+    @Override @Transactional(readOnly = true)
+    public List<OrderLineResponse> getOrderLines(Long orderId) {
         if (!supplyOrderRepository.existsById(orderId)) {
             throw new ResourceNotFoundException("SupplyOrder", "id", orderId);
         }
-
-        List<SupplyOrderLine> orderLines = supplyOrderLineRepository.findBySupplyOrder_IdOrder(orderId);
-        return supplyOrderLineMapper.toDTOList(orderLines);
+        return supplyOrderLineMapper.toResponseList(supplyOrderLineRepository.findBySupplyOrder_IdOrder(orderId));
     }
 }

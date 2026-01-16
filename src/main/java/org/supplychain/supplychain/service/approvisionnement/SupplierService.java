@@ -1,26 +1,13 @@
 package org.supplychain.supplychain.service.approvisionnement;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplierDTO;
-
+import org.supplychain.supplychain.dto.Approvisionnement.SupplierRequest;
+import org.supplychain.supplychain.dto.Approvisionnement.SupplierResponse;
 public interface SupplierService {
-
-    // Ajouter un fournisseur
-    SupplierDTO createSupplier(SupplierDTO supplierDTO);
-
-    // Modifier un fournisseur existant
-    SupplierDTO updateSupplier(Long id, SupplierDTO supplierDTO);
-
-    // Supprimer un fournisseur uniquement s'il n'a aucune commande active
+    SupplierResponse createSupplier(SupplierRequest request);
+    SupplierResponse updateSupplier(Long id, SupplierRequest request);
     void deleteSupplier(Long id);
-
-    //  Consulter la liste complète des fournisseurs avec pagination
-    Page<SupplierDTO> getAllSuppliers(Pageable pageable);
-
-    //  Rechercher un fournisseur par nom
-    Page<SupplierDTO> searchSuppliersByName(String name, Pageable pageable);
-
-    // Méthode  pour récupérer un fournisseur par ID
-    SupplierDTO getSupplierById(Long id);
+    Page<SupplierResponse> getAllSuppliers(Pageable pageable);
+    Page<SupplierResponse> searchSuppliersByName(String name, Pageable pageable);
+    SupplierResponse getSupplierById(Long id);
 }

@@ -1,216 +1,71 @@
 package org.supplychain.supplychain.controller.approvisionnement;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.*;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderDTO;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderLineDTO;
+import org.springframework.web.bind.annotation.*;
+import org.supplychain.supplychain.dto.Approvisionnement.*;
 import org.supplychain.supplychain.enums.SupplyOrderStatus;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.approvisionnement.SupplyOrderService;
-
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/supply-orders")
 @RequiredArgsConstructor
-@Tag(name = "Commandes d'Approvisionnement", description = "API de gestion des commandes d'approvisionnement")
 public class SupplyOrderController {
-
     private final SupplyOrderService supplyOrderService;
-
-
-    @Operation(summary = "Créer une commande d'approvisionnement", description = "Crée une nouvelle commande d'approvisionnement")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Commande créée avec succès"),
-            @ApiResponse(responseCode = "400", description = "Données invalides")
-    })
-        @PostMapping
-        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
-        public ResponseEntity<SuccessResponse<SupplyOrderDTO>> createSupplyOrder(
-            @Parameter(description = "Données de la commande d'approvisionnement", required = true)
-            @Valid @RequestBody SupplyOrderDTO supplyOrderDTO,
-            HttpServletRequest request) {
-
-        SupplyOrderDTO createdOrder = supplyOrderService.createSupplyOrder(supplyOrderDTO);
-
-        SuccessResponse<SupplyOrderDTO> response = SuccessResponse.of(
-                HttpStatus.CREATED,
-                "Commande d'approvisionnement créée avec succès",
-                createdOrder,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PostMapping
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+    public ResponseEntity<SuccessResponse<OrderResponse>> createSupplyOrder(
+            @Valid @RequestBody OrderRequest request, HttpServletRequest r) {
+        OrderResponse res = supplyOrderService.createSupplyOrder(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of(HttpStatus.CREATED, "Commande créée", res, r.getRequestURI()));
     }
-
-    @Operation(summary = "Modifier une commande d'approvisionnement", description = "Met à jour une commande d'approvisionnement existante")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Commande modifiée avec succès"),
-            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
-    })
-        @PutMapping("/{id}")
-        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
-        public ResponseEntity<SuccessResponse<SupplyOrderDTO>> updateSupplyOrder(
-            @Parameter(description = "ID de la commande", required = true)
-            @PathVariable Long id,
-            @Parameter(description = "Nouvelles données de la commande", required = true)
-            @Valid @RequestBody SupplyOrderDTO supplyOrderDTO,
-            HttpServletRequest request) {
-
-        SupplyOrderDTO updatedOrder = supplyOrderService.updateSupplyOrder(id, supplyOrderDTO);
-
-        SuccessResponse<SupplyOrderDTO> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Commande d'approvisionnement modifiée avec succès",
-                updatedOrder,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+    public ResponseEntity<SuccessResponse<OrderResponse>> updateSupplyOrder(
+            @PathVariable Long id, @Valid @RequestBody OrderRequest request, HttpServletRequest r) {
+        OrderResponse res = supplyOrderService.updateSupplyOrder(id, request);
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commande modifiée", res, r.getRequestURI()));
     }
-
-
-    @Operation(summary = "Supprimer une commande d'approvisionnement", description = "Supprime une commande d'approvisionnement")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Commande supprimée avec succès"),
-            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
-    })
-        @DeleteMapping("/{id}")
-        @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
-        public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(
-            @Parameter(description = "ID de la commande à supprimer", required = true)
-            @PathVariable Long id,
-            HttpServletRequest request) {
-
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
+    public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(@PathVariable Long id, HttpServletRequest r) {
         supplyOrderService.deleteSupplyOrder(id);
-
-        SuccessResponse<Void> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Commande d'approvisionnement supprimée avec succès",
-                null,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commande supprimée", null, r.getRequestURI()));
     }
-
-
-    @Operation(summary = "Lister toutes les commandes d'approvisionnement", description = "Récupère la liste paginée de toutes les commandes")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
-    })
-        @GetMapping
-        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
-        public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getAllSupplyOrders(
-            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "orderDate") String sortBy,
-            @Parameter(description = "Direction du tri") @RequestParam(defaultValue = "desc") String direction,
-            HttpServletRequest request) {
-
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-
-        Page<SupplyOrderDTO> orders = supplyOrderService.getAllSupplyOrders(pageable);
-
-        SuccessResponse<Page<SupplyOrderDTO>> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Liste des commandes d'approvisionnement récupérée avec succès",
-                orders,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+    @GetMapping
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
+    public ResponseEntity<SuccessResponse<Page<OrderResponse>>> getAllSupplyOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "orderDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String dir,
+            HttpServletRequest r) {
+        Sort.Direction direction = dir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Liste des commandes", supplyOrderService.getAllSupplyOrders(pageable), r.getRequestURI()));
     }
-
-    @Operation(summary = "Filtrer les commandes par statut", description = "Récupère les commandes d'approvisionnement par statut")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Commandes filtrées avec succès")
-    })
-        @GetMapping("/status/{status}")
-        @PreAuthorize("hasRole('SUPERVISEUR_LOGISTIQUE')")
-        public ResponseEntity<SuccessResponse<Page<SupplyOrderDTO>>> getSupplyOrdersByStatus(
-            @Parameter(description = "Statut de la commande", required = true)
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
+    public ResponseEntity<SuccessResponse<Page<OrderResponse>>> getSupplyOrdersByStatus(
             @PathVariable SupplyOrderStatus status,
-            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Taille de la page") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Champ de tri") @RequestParam(defaultValue = "orderDate") String sortBy,
-            @Parameter(description = "Direction du tri") @RequestParam(defaultValue = "desc") String direction,
-            HttpServletRequest request) {
-
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-
-        Page<SupplyOrderDTO> orders = supplyOrderService.getSupplyOrdersByStatus(status, pageable);
-
-        SuccessResponse<Page<SupplyOrderDTO>> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Commandes filtrées par statut récupérées avec succès",
-                orders,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest r) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "orderDate"));
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commandes par statut", supplyOrderService.getSupplyOrdersByStatus(status, pageable), r.getRequestURI()));
     }
-
-    @Operation(summary = "Récupérer une commande d'approvisionnement", description = "Récupère les détails d'une commande par son ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Commande trouvée"),
-            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
-    })
     @GetMapping("/{id}")
-    public ResponseEntity<SuccessResponse<SupplyOrderDTO>> getSupplyOrderById(
-            @Parameter(description = "ID de la commande", required = true)
-            @PathVariable Long id,
-            HttpServletRequest request) {
-
-        SupplyOrderDTO order = supplyOrderService.getSupplyOrderById(id);
-
-        SuccessResponse<SupplyOrderDTO> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Commande d'approvisionnement récupérée avec succès",
-                order,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
+    public ResponseEntity<SuccessResponse<OrderResponse>> getSupplyOrderById(@PathVariable Long id, HttpServletRequest r) {
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Détails de la commande", supplyOrderService.getSupplyOrderById(id), r.getRequestURI()));
     }
-
-
-    @Operation(summary = "Récupérer les lignes de commande", description = "Récupère toutes les lignes d'une commande d'approvisionnement")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lignes de commande récupérées avec succès"),
-            @ApiResponse(responseCode = "404", description = "Commande non trouvée")
-    })
     @GetMapping("/{orderId}/lines")
-    public ResponseEntity<SuccessResponse<List<SupplyOrderLineDTO>>> getOrderLines(
-            @Parameter(description = "ID de la commande", required = true)
-            @PathVariable Long orderId,
-            HttpServletRequest request) {
-
-        List<SupplyOrderLineDTO> orderLines = supplyOrderService.getOrderLines(orderId);
-
-        SuccessResponse<List<SupplyOrderLineDTO>> response = SuccessResponse.of(
-                HttpStatus.OK,
-                "Lignes de commande récupérées avec succès",
-                orderLines,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.ok(response);
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
+    public ResponseEntity<SuccessResponse<List<OrderLineResponse>>> getOrderLines(@PathVariable Long orderId, HttpServletRequest r) {
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Lignes de commande", supplyOrderService.getOrderLines(orderId), r.getRequestURI()));
     }
 }

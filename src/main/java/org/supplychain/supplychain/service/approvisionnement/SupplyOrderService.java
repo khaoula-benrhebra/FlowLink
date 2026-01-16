@@ -1,26 +1,17 @@
 package org.supplychain.supplychain.service.approvisionnement;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderDTO;
-import org.supplychain.supplychain.dto.Approvisionnement.SupplyOrderLineDTO;
+import org.supplychain.supplychain.dto.Approvisionnement.OrderRequest;
+import org.supplychain.supplychain.dto.Approvisionnement.OrderResponse;
+import org.supplychain.supplychain.dto.Approvisionnement.OrderLineResponse;
 import org.supplychain.supplychain.enums.SupplyOrderStatus;
-
 import java.util.List;
-
 public interface SupplyOrderService {
-
-    SupplyOrderDTO createSupplyOrder(SupplyOrderDTO supplyOrderDTO);
-
-    SupplyOrderDTO updateSupplyOrder(Long id, SupplyOrderDTO supplyOrderDTO);
-
+    OrderResponse createSupplyOrder(OrderRequest request);
+    OrderResponse updateSupplyOrder(Long id, OrderRequest request);
     void deleteSupplyOrder(Long id);
-
-    Page<SupplyOrderDTO> getAllSupplyOrders(Pageable pageable);
-
-    Page<SupplyOrderDTO> getSupplyOrdersByStatus(SupplyOrderStatus status, Pageable pageable);
-
-    SupplyOrderDTO getSupplyOrderById(Long id);
-
-    List<SupplyOrderLineDTO> getOrderLines(Long orderId);
+    Page<OrderResponse> getAllSupplyOrders(Pageable pageable);
+    Page<OrderResponse> getSupplyOrdersByStatus(SupplyOrderStatus status, Pageable pageable);
+    OrderResponse getSupplyOrderById(Long id);
+    List<OrderLineResponse> getOrderLines(Long orderId);
 }

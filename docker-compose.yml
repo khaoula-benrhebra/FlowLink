@@ -32,7 +32,7 @@ services:
       - xpack.ml.enabled=false
       - xpack.watcher.enabled=false
       - cluster.routing.allocation.disk.threshold_enabled=false
-      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -147,7 +147,7 @@ services:
       # Configuration OAuth2 hybride :
       # - issuer-uri (localhost:9090) : valide le claim "iss" du token
       # - jwk-set-uri (keycloak:8080) : récupère les clés via réseau Docker interne
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:9090/realms/flowlink-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/flowlink-realm
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/flowlink-realm/protocol/openid-connect/certs
     volumes:
       - ./logs:/logs
@@ -198,9 +198,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/FlowLink_db
       KC_DB_USERNAME: FlowLink_user
       KC_DB_PASSWORD: FlowLink_pass
-      # Configuration hostname - issuer sera localhost:9090
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 9090
+      # Configuration hostname - issuer sera keycloak:8080 (résolvable par les autres conteneurs)
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_PORT: 8080
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_HTTP_ENABLED: "true"
@@ -216,7 +216,7 @@ services:
     networks:
       - FlowLink-network
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3;if [ $? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
