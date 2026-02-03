@@ -11,10 +11,10 @@ import java.util.List;
 @Repository
 public interface SupplyOrderLineRepository extends JpaRepository<SupplyOrderLine, Long> {
 
-    //Récupérer les lignes d'une commande
+    // Récupérer les lignes d'une commande
     List<SupplyOrderLine> findBySupplyOrder_IdOrder(Long orderId);
 
     // Vérifier si une matière première est utilisée dans des commandes
-    @Query("SELECT COUNT(sol) > 0 FROM SupplyOrderLine sol WHERE sol.rawMaterial.idMaterial = :materialId")
+    @Query("SELECT COUNT(sol) > 0 FROM SupplyOrderLine sol WHERE sol.rawMaterial.idMaterial = :materialId AND sol.supplyOrder.status = 'EN_COURS'")
     boolean isMaterialUsedInOrders(@Param("materialId") Long materialId);
 }

@@ -98,7 +98,11 @@ public class UserController {
 
         @GetMapping
         @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<List<UserResponse>> getAllUsers() {
-                return ResponseEntity.ok(userService.getAllUsers());
+        public ResponseEntity<SuccessResponse<List<UserResponse>>> getAllUsers(HttpServletRequest request) {
+                return ResponseEntity.ok(SuccessResponse.of(
+                                HttpStatus.OK,
+                                "Liste des utilisateurs récupérée",
+                                userService.getAllUsers(),
+                                request.getRequestURI()));
         }
 }

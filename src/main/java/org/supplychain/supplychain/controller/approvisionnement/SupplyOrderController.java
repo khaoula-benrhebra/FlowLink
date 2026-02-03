@@ -1,4 +1,5 @@
 package org.supplychain.supplychain.controller.approvisionnement;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,18 +12,22 @@ import org.supplychain.supplychain.enums.SupplyOrderStatus;
 import org.supplychain.supplychain.response.SuccessResponse;
 import org.supplychain.supplychain.service.approvisionnement.SupplyOrderService;
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/supply-orders")
 @RequiredArgsConstructor
 public class SupplyOrderController {
     private final SupplyOrderService supplyOrderService;
+
     @PostMapping
     @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<OrderResponse>> createSupplyOrder(
             @Valid @RequestBody OrderRequest request, HttpServletRequest r) {
         OrderResponse res = supplyOrderService.createSupplyOrder(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of(HttpStatus.CREATED, "Commande créée", res, r.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SuccessResponse.of(HttpStatus.CREATED, "Commande créée", res, r.getRequestURI()));
     }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<OrderResponse>> updateSupplyOrder(
@@ -30,12 +35,14 @@ public class SupplyOrderController {
         OrderResponse res = supplyOrderService.updateSupplyOrder(id, request);
         return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commande modifiée", res, r.getRequestURI()));
     }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('RESPONSABLE_ACHATS')")
     public ResponseEntity<SuccessResponse<Void>> deleteSupplyOrder(@PathVariable Long id, HttpServletRequest r) {
         supplyOrderService.deleteSupplyOrder(id);
         return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commande supprimée", null, r.getRequestURI()));
     }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<Page<OrderResponse>>> getAllSupplyOrders(
@@ -46,8 +53,10 @@ public class SupplyOrderController {
             HttpServletRequest r) {
         Sort.Direction direction = dir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Liste des commandes", supplyOrderService.getAllSupplyOrders(pageable), r.getRequestURI()));
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Liste des commandes",
+                supplyOrderService.getAllSupplyOrders(pageable), r.getRequestURI()));
     }
+
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
     public ResponseEntity<SuccessResponse<Page<OrderResponse>>> getSupplyOrdersByStatus(
@@ -56,16 +65,33 @@ public class SupplyOrderController {
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest r) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "orderDate"));
-        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commandes par statut", supplyOrderService.getSupplyOrdersByStatus(status, pageable), r.getRequestURI()));
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Commandes par statut",
+                supplyOrderService.getSupplyOrdersByStatus(status, pageable), r.getRequestURI()));
     }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
-    public ResponseEntity<SuccessResponse<OrderResponse>> getSupplyOrderById(@PathVariable Long id, HttpServletRequest r) {
-        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Détails de la commande", supplyOrderService.getSupplyOrderById(id), r.getRequestURI()));
+    public ResponseEntity<SuccessResponse<OrderResponse>> getSupplyOrderById(@PathVariable Long id,
+            HttpServletRequest r) {
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Détails de la commande",
+                supplyOrderService.getSupplyOrderById(id), r.getRequestURI()));
     }
+
     @GetMapping("/{orderId}/lines")
     @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
-    public ResponseEntity<SuccessResponse<List<OrderLineResponse>>> getOrderLines(@PathVariable Long orderId, HttpServletRequest r) {
-        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Lignes de commande", supplyOrderService.getOrderLines(orderId), r.getRequestURI()));
+    public ResponseEntity<SuccessResponse<List<OrderLineResponse>>> getOrderLines(@PathVariable Long orderId,
+            HttpServletRequest r) {
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Lignes de commande",
+                supplyOrderService.getOrderLines(orderId), r.getRequestURI()));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_ACHATS', 'SUPERVISEUR_LOGISTIQUE')")
+    public ResponseEntity<SuccessResponse<OrderResponse>> updateStatus(
+            @PathVariable Long id,
+            @RequestParam SupplyOrderStatus status,
+            HttpServletRequest r) {
+        OrderResponse res = supplyOrderService.updateStatus(id, status);
+        return ResponseEntity.ok(SuccessResponse.of(HttpStatus.OK, "Statut mis à jour", res, r.getRequestURI()));
     }
 }

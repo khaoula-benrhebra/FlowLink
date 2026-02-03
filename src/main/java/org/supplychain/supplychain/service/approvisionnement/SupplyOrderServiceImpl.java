@@ -1,4 +1,5 @@
 package org.supplychain.supplychain.service.approvisionnement;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.supplychain.supplychain.repository.approvisionnement.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,8 +26,39 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
     private final RawMaterialRepository rawMaterialRepository;
     private final SupplyOrderMapper supplyOrderMapper;
     private final SupplyOrderLineMapper supplyOrderLineMapper;
+
+    /**
+     * Valide que toutes les matières premières appartiennent au fournisseur
+     * sélectionné
+     */
+    private void validateMaterialsBelongToSupplier(Long supplierId, List<OrderLineRequest> orderLines) {
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplierId));
+
+        // Récupérer les IDs des matières du fournisseur
+        List<Long> supplierMaterialIds = supplier.getMaterials().stream()
+                .map(RawMaterial::getIdMaterial)
+                .toList();
+
+        // Vérifier chaque matière de la commande
+        for (OrderLineRequest line : orderLines) {
+            if (!supplierMaterialIds.contains(line.getRawMaterialId())) {
+                RawMaterial material = rawMaterialRepository.findById(line.getRawMaterialId())
+                        .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", line.getRawMaterialId()));
+
+                throw new BusinessValidationException(
+                        String.format("La matière première '%s' (ID: %d) n'appartient pas au fournisseur '%s' (ID: %d)",
+                                material.getName(), material.getIdMaterial(),
+                                supplier.getName(), supplier.getIdSupplier()));
+            }
+        }
+    }
+
     @Override
     public OrderResponse createSupplyOrder(OrderRequest request) {
+        // Validation AVANT de créer la commande
+        validateMaterialsBelongToSupplier(request.getSupplierId(), request.getOrderLines());
+
         Supplier supplier = supplierRepository.findById(request.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.getSupplierId()));
         SupplyOrder order = new SupplyOrder();
@@ -54,6 +87,7 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         savedOrder.setTotalAmount(total);
         return supplyOrderMapper.toResponse(supplyOrderRepository.save(savedOrder));
     }
+
     @Override
     public OrderResponse updateSupplyOrder(Long id, OrderRequest request) {
         SupplyOrder order = supplyOrderRepository.findById(id)
@@ -62,6 +96,10 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         if (order.getStatus() == SupplyOrderStatus.RECUE) {
             throw new ResourceInUseException("Impossible de modifier une commande déjà reçue.");
         }
+
+        // Validation AVANT de mettre à jour
+        validateMaterialsBelongToSupplier(request.getSupplierId(), request.getOrderLines());
+
         Supplier supplier = supplierRepository.findById(request.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.getSupplierId()));
         order.setSupplier(supplier);
@@ -86,34 +124,65 @@ public class SupplyOrderServiceImpl implements SupplyOrderService {
         order.setTotalAmount(total);
         return supplyOrderMapper.toResponse(supplyOrderRepository.save(order));
     }
+
     @Override
     public void deleteSupplyOrder(Long id) {
         SupplyOrder order = supplyOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
-        if (order.getStatus() == SupplyOrderStatus.RECUE) {
-            throw new ResourceInUseException("Impossible de supprimer une commande reçue.");
+        if (order.getStatus() != SupplyOrderStatus.EN_ATTENTE) {
+            throw new ResourceInUseException(
+                    "Impossible de supprimer une commande avec le statut " + order.getStatus());
         }
         supplyOrderRepository.delete(order);
     }
-    @Override @Transactional(readOnly = true)
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getAllSupplyOrders(Pageable pageable) {
         return supplyOrderRepository.findAll(pageable).map(supplyOrderMapper::toResponse);
     }
-    @Override @Transactional(readOnly = true)
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getSupplyOrdersByStatus(SupplyOrderStatus status, Pageable pageable) {
         return supplyOrderRepository.findByStatus(status, pageable).map(supplyOrderMapper::toResponse);
     }
-    @Override @Transactional(readOnly = true)
+
+    @Override
+    @Transactional(readOnly = true)
     public OrderResponse getSupplyOrderById(Long id) {
         return supplyOrderRepository.findById(id)
                 .map(supplyOrderMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
     }
-    @Override @Transactional(readOnly = true)
+
+    @Override
+    @Transactional(readOnly = true)
     public List<OrderLineResponse> getOrderLines(Long orderId) {
         if (!supplyOrderRepository.existsById(orderId)) {
             throw new ResourceNotFoundException("SupplyOrder", "id", orderId);
         }
         return supplyOrderLineMapper.toResponseList(supplyOrderLineRepository.findBySupplyOrder_IdOrder(orderId));
+    }
+
+    @Override
+    public OrderResponse updateStatus(Long id, SupplyOrderStatus newStatus) {
+        SupplyOrder order = supplyOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("SupplyOrder", "id", id));
+
+        // Si le nouveau statut est RECUE et que la commande n'était pas déjà RECUE
+        if (newStatus == SupplyOrderStatus.RECUE && order.getStatus() != SupplyOrderStatus.RECUE) {
+            for (SupplyOrderLine line : order.getOrderLines()) {
+                RawMaterial material = line.getRawMaterial();
+                int quantityReceived = line.getQuantity();
+
+                // Mise à jour du stock
+                material.setStock(material.getStock() + quantityReceived);
+                rawMaterialRepository.save(material);
+            }
+        }
+
+        order.setStatus(newStatus);
+        return supplyOrderMapper.toResponse(supplyOrderRepository.save(order));
     }
 }

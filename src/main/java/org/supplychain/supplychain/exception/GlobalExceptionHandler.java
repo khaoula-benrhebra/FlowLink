@@ -21,134 +21,141 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger("SECURITY");
+        private static final Logger logger = LoggerFactory.getLogger("SECURITY");
 
-    private void logSecurity(String event, HttpServletRequest request, int status) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String user = (auth != null) ? auth.getName() : "anonymous";
-        logger.warn("{} - User: {} - Endpoint: {} - Status: {}", event, user, request.getRequestURI(), status);
-    }
+        private void logSecurity(String event, HttpServletRequest request, int status) {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String user = (auth != null) ? auth.getName() : "anonymous";
+                logger.warn("{} - User: {} - Endpoint: {} - Status: {}", event, user, request.getRequestURI(), status);
+        }
 
-    // --------------------- ResourceNotFoundException ---------------------
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, HttpServletRequest request) {
+        // --------------------- ResourceNotFoundException ---------------------
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+                        ResourceNotFoundException ex, HttpServletRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.NOT_FOUND.value(),
+                                "Not Found",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
 
-    // --------------------- DuplicateResourceException ---------------------
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
-            DuplicateResourceException ex, HttpServletRequest request) {
+        // --------------------- DuplicateResourceException ---------------------
+        @ExceptionHandler(DuplicateResourceException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
+                        DuplicateResourceException ex, HttpServletRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.CONFLICT.value(),
+                                "Conflict",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        }
 
-    // --------------------- ResourceInUseException ---------------------
-    @ExceptionHandler(ResourceInUseException.class)
-    public ResponseEntity<ErrorResponse> handleResourceInUseException(
-            ResourceInUseException ex, HttpServletRequest request) {
+        // --------------------- ResourceInUseException ---------------------
+        @ExceptionHandler(ResourceInUseException.class)
+        public ResponseEntity<ErrorResponse> handleResourceInUseException(
+                        ResourceInUseException ex, HttpServletRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.CONFLICT.value(),
+                                "Conflict",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        }
 
-    // --------------------- InsufficientStockException ---------------------
-    @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientStockException(
-            InsufficientStockException ex, HttpServletRequest request) {
+        // --------------------- InsufficientStockException ---------------------
+        @ExceptionHandler(InsufficientStockException.class)
+        public ResponseEntity<ErrorResponse> handleInsufficientStockException(
+                        InsufficientStockException ex, HttpServletRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Insufficient Stock",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Insufficient Stock",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
 
-    // --------------------- BadCredentialsException ---------------------
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialsException(
-            BadCredentialsException ex, HttpServletRequest request) {
+        // --------------------- BusinessValidationException ---------------------
+        @ExceptionHandler(BusinessValidationException.class)
+        public ResponseEntity<ErrorResponse> handleBusinessValidationException(
+                        BusinessValidationException ex, HttpServletRequest request) {
 
-        logSecurity("Tentative connexion échouée", request, 401);
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Business Validation Failed",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                "Email ou mot de passe incorrect",
-                request.getRequestURI()
-        );
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-    }
+        // --------------------- BadCredentialsException ---------------------
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ErrorResponse> handleBadCredentialsException(
+                        BadCredentialsException ex, HttpServletRequest request) {
 
-    // --------------------- Validation errors ---------------------
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
+                logSecurity("Tentative connexion échouée", request, 401);
 
-        Map<String, String> validationErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            validationErrors.put(fieldName, errorMessage);
-        });
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Unauthorized",
+                                "Email ou mot de passe incorrect",
+                                request.getRequestURI());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Failed",
-                "Input validation failed. Check validationErrors field for details.",
-                request.getRequestURI(),
-                validationErrors
-        );
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
 
+        // --------------------- Validation errors ---------------------
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleValidationException(
+                        MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
+                Map<String, String> validationErrors = new HashMap<>();
+                ex.getBindingResult().getAllErrors().forEach(error -> {
+                        String fieldName = ((FieldError) error).getField();
+                        String errorMessage = error.getDefaultMessage();
+                        validationErrors.put(fieldName, errorMessage);
+                });
 
-    // --------------------- Global exception ---------------------
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, HttpServletRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Validation Failed",
+                                "Input validation failed. Check validationErrors field for details.",
+                                request.getRequestURI(),
+                                validationErrors);
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+        // --------------------- Global exception ---------------------
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErrorResponse> handleGlobalException(
+                        Exception ex, HttpServletRequest request) {
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "Internal Server Error",
+                                ex.getMessage(),
+                                request.getRequestURI());
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 }

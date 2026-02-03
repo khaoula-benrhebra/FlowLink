@@ -6,10 +6,8 @@ import org.supplychain.supplychain.model.Product;
 
 import java.util.List;
 
-@Mapper(
-    componentModel = MappingConstants.ComponentModel.SPRING,
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {
+        BillOfMaterialMapper.class })
 public interface ProductMapper {
 
     ProductDTO toDTO(Product product);
@@ -20,8 +18,11 @@ public interface ProductMapper {
     @Mapping(target = "billOfMaterials", ignore = true)
     @Mapping(target = "productionOrders", ignore = true)
     @Mapping(target = "productOrders", ignore = true)
+    @Mapping(target = "stock", source = "stock", defaultValue = "0")
+    @Mapping(target = "minimumStock", source = "minimumStock", defaultValue = "0")
     Product toEntity(ProductDTO dto);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "idProduct", ignore = true)
     @Mapping(target = "billOfMaterials", ignore = true)
     @Mapping(target = "productionOrders", ignore = true)

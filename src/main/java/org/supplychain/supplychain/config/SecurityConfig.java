@@ -1,4 +1,5 @@
 package org.supplychain.supplychain.config;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import org.supplychain.supplychain.security.CustomAuthenticationEntryPoint;
 import org.supplychain.supplychain.security.JwtAuthFilter;
 import java.util.Arrays;
 import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -31,14 +33,17 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -46,6 +51,7 @@ public class SecurityConfig {
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -60,8 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authenticationProvider(authenticationProvider())
@@ -69,6 +74,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     // --- Configuration CORS ajoutée ---
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -76,9 +82,9 @@ public class SecurityConfig {
         // Autorise Angular sur le port 4200
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
         // Autorise les méthodes HTTP courantes
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Autorise tous les headers (notamment Authorization)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        // Autorise tous les headers
+        configuration.setAllowedHeaders(List.of("*"));
         // Autorise l'envoi de cookies/credentials si nécessaire
         configuration.setAllowCredentials(true);
 

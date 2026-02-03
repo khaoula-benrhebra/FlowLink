@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.supplychain.supplychain.enums.Priority;
 import org.supplychain.supplychain.enums.ProductionOrderStatus;
 
@@ -22,6 +23,8 @@ public class ProductionOrder extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idOrder;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
@@ -38,7 +41,6 @@ public class ProductionOrder extends BaseEntity {
     private Priority priority = Priority.STANDARD;
 
     private LocalDate startDate;
-
 
     private LocalDate endDate;
 }

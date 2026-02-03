@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.supplychain.supplychain.enums.SupplyOrderStatus;
 import org.supplychain.supplychain.model.BaseEntity;
 
@@ -25,16 +26,19 @@ public class SupplyOrder extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idOrder;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "supplyOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SupplyOrderLine> orderLines = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDate orderDate;
-
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,6 +46,5 @@ public class SupplyOrder extends BaseEntity {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal totalAmount;
-
 
 }

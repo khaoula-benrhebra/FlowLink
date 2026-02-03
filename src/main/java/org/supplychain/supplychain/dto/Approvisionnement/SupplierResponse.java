@@ -1,10 +1,9 @@
 package org.supplychain.supplychain.dto.Approvisionnement;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.List;
+
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SupplierResponse {
     private Long idSupplier;
     private String name;
@@ -13,4 +12,6 @@ public class SupplierResponse {
     private String phone;
     private Double rating;
     private Integer leadTime;
+
+    private List<MaterialResponse> materials;
 }

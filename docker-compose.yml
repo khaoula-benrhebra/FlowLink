@@ -21,113 +21,6 @@ services:
       retries: 5
       start_period: 10s
 
-  # Elasticsearch pour l'indexation des logs
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: FlowLink-elasticsearch
-    restart: unless-stopped
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.ml.enabled=false
-      - xpack.watcher.enabled=false
-      - cluster.routing.allocation.disk.threshold_enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - FlowLink-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cat/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
-
-  # Logstash pour la collecte des logs
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.11.0
-    container_name: FlowLink-logstash
-    restart: unless-stopped
-    ports:
-      - "5044:5044"
-    volumes:
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-      - ./logs:/logs
-    networks:
-      - FlowLink-network
-    depends_on:
-      - elasticsearch
-    environment:
-      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
-
-  # Kibana pour la visualisation
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: FlowLink-kibana
-    restart: unless-stopped
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    networks:
-      - FlowLink-network
-    depends_on:
-      - elasticsearch
-
-  # Base de données pour SonarQube
-  sonarqube-db:
-    image: postgres:16-alpine
-    container_name: sonarqube-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: sonarqube
-      POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar
-    volumes:
-      - sonarqube_db:/var/lib/postgresql/data
-    networks:
-      - FlowLink-network
-
-  # SonarQube
-  sonarqube:
-    image: sonarqube:community
-    container_name: sonarqube
-    restart: unless-stopped
-    depends_on:
-      - sonarqube-db
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
-      SONAR_JDBC_USERNAME: sonar
-      SONAR_JDBC_PASSWORD: sonar
-    ports:
-      - "9000:9000"
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    networks:
-      - FlowLink-network
-
-  # Jenkins
-  jenkins:
-    image: jenkins/jenkins:lts
-    container_name: jenkins
-    restart: unless-stopped
-    ports:
-      - "8090:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-    networks:
-      - FlowLink-network
-
   app:
     build:
       context: .
@@ -144,19 +37,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: FlowLink_pass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_LIQUIBASE_ENABLED: false
-      # Configuration OAuth2 hybride :
-      # - issuer-uri (localhost:9090) : valide le claim "iss" du token
-      # - jwk-set-uri (keycloak:8080) : récupère les clés via réseau Docker interne
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/flowlink-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/flowlink-realm/protocol/openid-connect/certs
     volumes:
       - ./logs:/logs
     depends_on:
       postgres:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      keycloak:
         condition: service_healthy
     networks:
       - FlowLink-network
@@ -184,60 +68,10 @@ services:
     networks:
       - FlowLink-network
 
-  # Keycloak - Identity and Access Management
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0
-    container_name: FlowLink-keycloak
-    restart: unless-stopped
-    environment:
-      # Admin credentials
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      # Database - utilise la même instance PostgreSQL
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/FlowLink_db
-      KC_DB_USERNAME: FlowLink_user
-      KC_DB_PASSWORD: FlowLink_pass
-      # Configuration hostname - issuer sera keycloak:8080 (résolvable par les autres conteneurs)
-      KC_HOSTNAME: keycloak
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_HTTPS: "false"
-      KC_HTTP_ENABLED: "true"
-      KC_PROXY: edge
-    command: start-dev --import-realm
-    ports:
-      - "9090:8080"
-    volumes:
-      - ./keycloak/flowlink-realm.json:/opt/keycloak/data/import/flowlink-realm.json:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - FlowLink-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/ready || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
 volumes:
   postgres_data:
     driver: local
   pgadmin_data:
-    driver: local
-  sonarqube_db:
-    driver: local
-  sonarqube_data:
-    driver: local
-  sonarqube_extensions:
-    driver: local
-  sonarqube_logs:
-    driver: local
-  jenkins_home:
-    driver: local
-  elasticsearch_data:
     driver: local
 
 networks:

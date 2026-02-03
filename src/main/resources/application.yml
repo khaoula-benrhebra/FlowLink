@@ -24,6 +24,7 @@ spring:
 
   main:
     allow-bean-definition-overriding: true
+    allow-circular-references: true
 
 server:
   port: 8080

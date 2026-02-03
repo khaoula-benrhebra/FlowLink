@@ -13,6 +13,7 @@ import org.supplychain.supplychain.exception.ResourceNotFoundException;
 import org.supplychain.supplychain.mapper.Approvisionnement.RawMaterialMapper;
 import org.supplychain.supplychain.model.RawMaterial;
 import org.supplychain.supplychain.model.Supplier;
+import org.supplychain.supplychain.model.SupplyOrderLine;
 import org.supplychain.supplychain.repository.approvisionnement.RawMaterialRepository;
 import org.supplychain.supplychain.repository.approvisionnement.SupplierRepository;
 import org.supplychain.supplychain.repository.approvisionnement.SupplyOrderLineRepository;
@@ -65,13 +66,23 @@ public class RawMaterialServiceImpl implements RawMaterialService {
 
     @Override
     public void deleteRawMaterial(Long id) {
-        if (!rawMaterialRepository.existsById(id)) {
-            throw new ResourceNotFoundException("RawMaterial", "id", id);
-        }
+        RawMaterial material = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("RawMaterial", "id", id));
+
         if (supplyOrderLineRepository.isMaterialUsedInOrders(id)) {
-            throw new ResourceInUseException("RawMaterial", id, "commandes existantes");
+            throw new ResourceInUseException("RawMaterial", id,
+                    "cette matière est utilisée dans des commandes en cours");
         }
-        rawMaterialRepository.deleteById(id);
+
+        // Clear ManyToMany relationship
+        material.getSuppliers().clear();
+        rawMaterialRepository.save(material);
+
+        // Clear SupplyOrderLine dependencies
+        // Important: this allows deletion even if used in EN_ATTENTE or RECUE orders
+        supplyOrderLineRepository.deleteAll(material.getSupplyOrderLines());
+
+        rawMaterialRepository.delete(material);
     }
 
     @Override

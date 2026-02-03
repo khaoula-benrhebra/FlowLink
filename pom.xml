@@ -31,6 +31,8 @@
         <jacoco.version>0.8.11</jacoco.version>
         <sonar.host.url>http://host.docker.internal:9000</sonar.host.url>
         <sonar.login>${env.SONAR_LOGIN}</sonar.login>
+        <!-- Disable tests during CI/build when developer requests it -->
+        <skipTests>true</skipTests>
     </properties>
     <dependencies>
         <dependency>

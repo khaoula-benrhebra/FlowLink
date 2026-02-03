@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +37,14 @@ public class Supplier extends BaseEntity {
 
     private Integer leadTime;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL)
     private List<SupplyOrder> supplyOrders = new ArrayList<>();
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToMany(mappedBy = "suppliers")
     private List<RawMaterial> materials = new ArrayList<>();
-
 
 }

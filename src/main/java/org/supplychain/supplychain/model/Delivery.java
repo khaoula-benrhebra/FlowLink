@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.supplychain.supplychain.enums.DeliveryStatus;
 
 import java.math.BigDecimal;
@@ -22,6 +23,8 @@ public class Delivery extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idDelivery;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
@@ -30,13 +33,11 @@ public class Delivery extends BaseEntity {
 
     private String driver;
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeliveryStatus status = DeliveryStatus.PLANIFIEE;
 
     private LocalDate DeliveryDate;
-
 
     @Column(precision = 10, scale = 2)
     private BigDecimal deliveryCost;

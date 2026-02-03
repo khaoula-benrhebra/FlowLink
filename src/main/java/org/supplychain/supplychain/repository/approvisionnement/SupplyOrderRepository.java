@@ -14,14 +14,13 @@ import java.util.Optional;
 @Repository
 public interface SupplyOrderRepository extends JpaRepository<SupplyOrder, Long> {
 
-
-    //Consulter la liste complète des commandes avec pagination
+    // Consulter la liste complète des commandes avec pagination
     Page<SupplyOrder> findAll(Pageable pageable);
 
-    //  Suivre le statut des commandes
+    // Suivre le statut des commandes
     Page<SupplyOrder> findByStatus(SupplyOrderStatus status, Pageable pageable);
 
     // Vérifier si un fournisseur a des commandes actives
-    @Query("SELECT COUNT(s) > 0 FROM SupplyOrder s WHERE s.supplier.idSupplier = :supplierId AND s.status != 'REÇUE'")
+    @Query("SELECT COUNT(s) > 0 FROM SupplyOrder s WHERE s.supplier.idSupplier = :supplierId AND s.status = 'EN_COURS'")
     boolean hasActiveOrders(@Param("supplierId") Long supplierId);
 }

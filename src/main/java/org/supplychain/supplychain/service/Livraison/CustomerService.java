@@ -1,20 +1,14 @@
 package org.supplychain.supplychain.service.Livraison;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.supplychain.supplychain.dto.Livraison.CustomerDTO;
-
+import org.supplychain.supplychain.dto.Livraison.CustomerRequestDTO;
+import org.supplychain.supplychain.dto.Livraison.CustomerResponseDTO;
 public interface CustomerService {
-
-    CustomerDTO createCustomer(CustomerDTO customerDTO);
-
-    CustomerDTO updateCustomer(Long id, CustomerDTO customerDTO);
-
+    CustomerResponseDTO createCustomer(CustomerRequestDTO customerDTO);
+    CustomerResponseDTO updateCustomer(Long id, CustomerRequestDTO customerDTO);
     void deleteCustomer(Long id);
-
-    Page<CustomerDTO> getAllCustomers(Pageable pageable);
-
-    Page<CustomerDTO> searchCustomersByName(String name, Pageable pageable);
-
-    CustomerDTO getCustomerById(Long id);
+    Page<CustomerResponseDTO> getAllCustomers(String search, Pageable pageable);
+    CustomerResponseDTO getCustomerById(Long id);
+    // Récupère le détail avec statistiques
+    CustomerResponseDTO getCustomerByIdWithStats(Long id);
 }
